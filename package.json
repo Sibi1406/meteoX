@@ -1,0 +1,23 @@
+{
+  "name": "meteox",
+  "version": "1.0.0",
+  "description": "MeteoX — Grounded AI Weather & Hyperlocal Climate Intelligence Platform",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "test": "npm --prefix functions test",
+    "seed": "node scripts/seedDemoData.js",
+    "emulators": "firebase emulators:start"
+  },
+  "keywords": [
+    "weather",
+    "rag",
+    "gemini",
+    "firebase",
+    "pwa",
+    "agriculture"
+  ],
+  "author": "",
+  "license": "MIT"
+}

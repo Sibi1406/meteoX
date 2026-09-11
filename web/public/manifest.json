@@ -1,0 +1,24 @@
+{
+  "name": "MeteoX — Grounded Weather Advisory",
+  "short_name": "MeteoX",
+  "description": "Multilingual, role-aware grounded weather advisory platform with self-calibrating local trust.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#03201A",
+  "theme_color": "#053229",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
