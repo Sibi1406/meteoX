@@ -21,13 +21,14 @@ const { info, error } = require("./lib/utils/logger");
 
 setGlobalOptions({ region: "asia-south1", maxInstances: 10 });
 
+const geminiKey = defineSecret("GEMINI_API_KEY");
 const bhashiniKey = defineSecret("BHASHINI_API_KEY");
 
 // ---------------------------------------------------------------------------
 // 1. handleQuery — End-to-End Query Understanding -> RAG -> Gemini -> Grounding
 // ---------------------------------------------------------------------------
 exports.handleQuery = onCall(
-  { secrets: [bhashiniKey] },
+  { secrets: [geminiKey, bhashiniKey] },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Please sign in to access WeatherGPT.");
@@ -180,7 +181,7 @@ exports.handleQuery = onCall(
 // ---------------------------------------------------------------------------
 // 2. getWeatherDashboard — Pre-fetches comprehensive dashboard state
 // ---------------------------------------------------------------------------
-exports.getWeatherDashboard = onCall(async (request) => {
+exports.getWeatherDashboard = onCall({ invoker: "public" }, async (request) => {
   const { lat, lng, role, languageCode } = request.data || {};
   if (lat == null || lng == null) {
     throw new HttpsError("invalid-argument", "Latitude and Longitude required");

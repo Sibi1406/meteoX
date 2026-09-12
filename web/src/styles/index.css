@@ -3158,6 +3158,670 @@ body {
   }
 }
 
+/* Final light-theme dashboard pass: compact, readable, and data-dense. */
+body {
+  background: #f6f7f5;
+  color: #39433f;
+}
+
+.page {
+  gap: 16px;
+  padding-top: 20px;
+  padding-bottom: 28px;
+}
+
+.dashboard-page-wide {
+  gap: 16px;
+}
+
+.dashboard-main-grid {
+  gap: 16px;
+}
+
+.dashboard-primary-col,
+.dashboard-sidebar-col {
+  gap: 16px;
+}
+
+.dashboard-header-bar,
+.dashboard-section-card,
+.telemetry-panel-card,
+.trust-card,
+.feedback-container,
+.demo-mode-panel,
+.station-card-glass,
+.profile-card,
+.location-card,
+.chat-welcome-card,
+.chat-composer {
+  background: #ffffff;
+  border: 1px solid #d9dfdb;
+  box-shadow: 0 5px 16px rgba(31, 51, 43, 0.07);
+}
+
+.dashboard-header-bar {
+  padding: 14px 20px;
+}
+
+.location-cluster-title h2,
+.section-card-header h4,
+.telemetry-panel-card h4,
+.trust-title,
+.demo-title,
+.section-heading,
+.station-name,
+.profile-header h2,
+.group-label {
+  color: #1c3029;
+}
+
+.coords-sub,
+.section-subtext,
+.section-meta,
+.tele-label,
+.tele-sub,
+.trust-meta,
+.trust-footer,
+.station-footer-role,
+.profile-field-group .coords-display {
+  color: #65736d;
+}
+
+.hero-weather-card-glass {
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #fffaf4 0%, #f3f7f4 100%);
+  border: 1px solid #e3b8a9;
+  box-shadow: 0 8px 22px rgba(31, 51, 43, 0.08);
+}
+
+.hero-temp-large,
+.feels-value,
+.metric-chip .m-val,
+.tele-val,
+.trust-value,
+.station-temp,
+.hourly-temp {
+  color: #1c3029;
+}
+
+.hero-condition-text,
+.temp-unit,
+.minmax-row,
+.hourly-time,
+.daily-condition {
+  color: #53625b;
+}
+
+.hero-feels-box,
+.metric-chip,
+.tele-item,
+.station-stats-row,
+.hourly-chip,
+.daily-forecast-row {
+  background: #f3f6f3;
+  border: 1px solid #dce4df;
+}
+
+.hero-metrics-strip {
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.metric-chip {
+  padding: 10px 12px;
+}
+
+.dashboard-section-card {
+  padding: 18px 20px;
+}
+
+.section-card-header {
+  margin-bottom: 12px;
+}
+
+.section-card-header h4 {
+  font-size: 17px;
+}
+
+.section-subtext {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.hourly-forecast-row {
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.hourly-chip {
+  min-width: 76px;
+  padding: 10px 8px;
+  gap: 4px;
+  border-radius: 10px;
+}
+
+.hourly-time {
+  font-size: 11px;
+}
+
+.hourly-icon {
+  font-size: 21px;
+}
+
+.hourly-rain {
+  color: #b54f32;
+  font-size: 10px;
+}
+
+/* High-contrast light canvas for every authenticated page. */
+body {
+  background: #eaf0ed;
+  color: #263b33;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(234, 240, 237, 0.94)),
+    radial-gradient(circle at 80% 0%, rgba(214, 95, 63, 0.09), transparent 32%);
+}
+
+.page-container {
+  background: transparent;
+}
+
+.page {
+  color: #263b33;
+}
+
+.topbar {
+  background: #fffdf8;
+  border-bottom: 2px solid #d4dfd9;
+  box-shadow: 0 3px 14px rgba(28, 48, 41, 0.10);
+}
+
+.topbar h1,
+.brand-title,
+.desktop-nav-link,
+.topbar-district-picker select,
+.header-role-pill,
+.lang-btn {
+  color: #263b33;
+}
+
+.desktop-nav-link.active {
+  color: #7e3b26;
+  background: #ffe9df;
+  border-color: #e3a28d;
+}
+
+.dashboard-header-bar,
+.dashboard-section-card,
+.telemetry-panel-card,
+.trust-card,
+.feedback-container,
+.demo-mode-panel,
+.station-card-glass,
+.home-conditions-strip,
+.home-advisory-quote-card,
+.home-confidence-card,
+.home-feedback-card,
+.profile-card,
+.location-card,
+.chat-component {
+  border: 1px solid #c7d4cd;
+  box-shadow: 0 8px 22px rgba(28, 48, 41, 0.11);
+}
+
+.home-conditions-strip {
+  border-left: 5px solid #d65f3f;
+}
+
+.home-advisory-quote-card {
+  border-left: 5px solid #5875b7;
+}
+
+.home-confidence-card {
+  border-top: 4px solid #5875b7;
+}
+
+.home-feedback-card {
+  border-top: 4px solid #c8942d;
+}
+
+.home-conditions-district,
+.home-advisory-quote-text,
+.home-confidence-reports,
+.home-feedback-question,
+.home-quick-prompts-label,
+.home-conditions-sub,
+.home-advisory-role-badge,
+.section-subtext,
+.section-meta,
+.coords-sub,
+.tele-label,
+.tele-sub,
+.station-footer-role {
+  color: #465a51;
+}
+
+.home-conditions-sub,
+.home-confidence-reports,
+.section-subtext,
+.section-meta,
+.coords-sub {
+  font-weight: 600;
+}
+
+.home-conditions-chip,
+.hero-feels-box,
+.metric-chip,
+.tele-item,
+.hourly-chip,
+.daily-forecast-row,
+.station-stats-row {
+  background: #e8f0ec;
+  border-color: #c4d3ca;
+}
+
+.home-prompt-chip {
+  background: #fffdf8;
+  color: #263b33;
+  border: 1px solid #c8942d;
+  box-shadow: 0 4px 12px rgba(28, 48, 41, 0.10);
+}
+
+.home-prompt-chip:hover {
+  background: #fff0dc;
+  color: #7e3b26;
+}
+
+.live-radar-tag,
+.live-pill,
+.status-green,
+.trust-status-text {
+  color: #176b55;
+}
+
+/* Home uses the same visual language as Dashboard. */
+.home-page-personalized {
+  background: transparent;
+}
+
+.home-personalized-container {
+  max-width: 1180px;
+  gap: 16px;
+}
+
+.home-conditions-strip,
+.home-advisory-quote-card,
+.home-confidence-card,
+.home-feedback-card {
+  border-color: #c7d4cd;
+  box-shadow: 0 8px 22px rgba(28, 48, 41, 0.11);
+}
+
+.home-conditions-strip {
+  border-left: 5px solid #d65f3f;
+  background: linear-gradient(135deg, #fffaf4 0%, #f3f7f4 100%);
+}
+
+.home-advisory-quote-card {
+  border-left: 5px solid #5875b7;
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.home-confidence-card {
+  border-top: 4px solid #5875b7;
+  background: linear-gradient(135deg, #f7f9ff 0%, #ffffff 100%);
+}
+
+.home-feedback-card {
+  border-top: 4px solid #c8942d;
+  background: linear-gradient(135deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.home-conditions-district,
+.home-advisory-quote-text,
+.home-feedback-question,
+.home-confidence-reports {
+  color: #263b33;
+}
+
+.home-conditions-sub,
+.home-quick-prompts-label,
+.home-confidence-header,
+.home-advisory-role-badge,
+.home-powered-ai-tag {
+  color: #465a51;
+}
+
+.home-conditions-chip {
+  color: #263b33;
+  background: #e8f0ec;
+  border-color: #c4d3ca;
+}
+
+.home-prompt-chip {
+  color: #263b33;
+  background: #fffdf8;
+  border-color: #c8942d;
+}
+
+.home-prompt-chip:hover {
+  color: #7e3b26;
+  background: #fff0dc;
+  border-color: #d65f3f;
+}
+
+.daily-forecast-row {
+  padding: 9px 10px;
+}
+
+.daily-name,
+.daily-temp-bar .t-min,
+.daily-temp-bar .t-max {
+  color: #263b33;
+}
+
+.btn-primary {
+  background: #d65f3f;
+  box-shadow: 0 4px 12px rgba(214, 95, 63, 0.22);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #34463e;
+  border-color: #c5d1ca;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #eef4f0;
+  color: #1c3029;
+}
+
+input,
+select,
+textarea {
+  color: #263b33;
+  background: #ffffff;
+  border-color: #cbd7d0;
+}
+
+/* Home theme is intentionally last in the cascade. */
+.home-page-personalized { background: transparent; }
+.home-personalized-container { max-width: 1180px; gap: 16px; }
+.home-conditions-strip,
+.home-advisory-quote-card,
+.home-confidence-card,
+.home-feedback-card {
+  border-color: #b7c9bf;
+  box-shadow: 0 8px 22px rgba(28, 48, 41, 0.13);
+}
+.home-conditions-strip {
+  border-left: 5px solid #d65f3f;
+  background: linear-gradient(135deg, #fff5e9 0%, #e8f0ec 100%);
+}
+.home-advisory-quote-card {
+  border-left: 5px solid #5875b7;
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%);
+}
+.home-confidence-card {
+  border-top: 4px solid #5875b7;
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%);
+}
+.home-feedback-card {
+  border-top: 4px solid #c8942d;
+  background: linear-gradient(135deg, #fff4d9 0%, #ffffff 100%);
+}
+.home-conditions-district,
+.home-advisory-quote-text,
+.home-feedback-question,
+.home-confidence-reports { color: #1d332a; }
+.home-conditions-sub,
+.home-quick-prompts-label,
+.home-confidence-header,
+.home-advisory-role-badge,
+.home-powered-ai-tag { color: #3e574b; }
+.home-conditions-chip {
+  color: #1d332a;
+  background: #dcebe2;
+  border-color: #aec6b7;
+}
+.home-prompt-chip {
+  color: #1d332a;
+  background: #fffdf8;
+  border-color: #c8942d;
+}
+.home-prompt-chip:hover {
+  color: #7e3b26;
+  background: #ffe8c5;
+  border-color: #d65f3f;
+}
+
+/* Specificity guard for duplicated legacy Home rules. */
+.page.home-page-personalized .home-conditions-strip {
+  background: linear-gradient(135deg, #fff5e9 0%, #e8f0ec 100%) !important;
+  border-left: 5px solid #d65f3f !important;
+  border-color: #b7c9bf !important;
+}
+.page.home-page-personalized .home-advisory-quote-card {
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%) !important;
+  border-left: 5px solid #5875b7 !important;
+  border-color: #b7c9bf !important;
+}
+.page.home-page-personalized .home-confidence-card {
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%) !important;
+  border-top: 4px solid #5875b7 !important;
+  border-color: #b7c9bf !important;
+}
+.page.home-page-personalized .home-feedback-card {
+  background: linear-gradient(135deg, #fff4d9 0%, #ffffff 100%) !important;
+  border-top: 4px solid #c8942d !important;
+  border-color: #b7c9bf !important;
+}
+.page.home-page-personalized .home-conditions-chip {
+  background: #dcebe2 !important;
+  border-color: #aec6b7 !important;
+  color: #1d332a !important;
+}
+.page.home-page-personalized .home-conditions-district,
+.page.home-page-personalized .home-advisory-quote-text,
+.page.home-page-personalized .home-feedback-question,
+.page.home-page-personalized .home-confidence-reports {
+  color: #1d332a !important;
+}
+
+/* Home theme is intentionally last in the cascade. */
+.home-page-personalized {
+  background: transparent;
+}
+
+.home-personalized-container {
+  max-width: 1180px;
+  gap: 16px;
+}
+
+.home-conditions-strip,
+.home-advisory-quote-card,
+.home-confidence-card,
+.home-feedback-card {
+  border-color: #b7c9bf;
+  box-shadow: 0 8px 22px rgba(28, 48, 41, 0.13);
+}
+
+.home-conditions-strip {
+  border-left: 5px solid #d65f3f;
+  background: linear-gradient(135deg, #fff5e9 0%, #e8f0ec 100%);
+}
+
+.home-advisory-quote-card {
+  border-left: 5px solid #5875b7;
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%);
+}
+
+.home-confidence-card {
+  border-top: 4px solid #5875b7;
+  background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%);
+}
+
+.home-feedback-card {
+  border-top: 4px solid #c8942d;
+  background: linear-gradient(135deg, #fff4d9 0%, #ffffff 100%);
+}
+
+.home-conditions-district,
+.home-advisory-quote-text,
+.home-feedback-question,
+.home-confidence-reports {
+  color: #1d332a;
+}
+
+.home-conditions-sub,
+.home-quick-prompts-label,
+.home-confidence-header,
+.home-advisory-role-badge,
+.home-powered-ai-tag {
+  color: #3e574b;
+}
+
+.home-conditions-chip {
+  color: #1d332a;
+  background: #dcebe2;
+  border-color: #aec6b7;
+}
+
+.home-prompt-chip {
+  color: #1d332a;
+  background: #fffdf8;
+  border-color: #c8942d;
+}
+
+.home-prompt-chip:hover {
+  color: #7e3b26;
+  background: #ffe8c5;
+  border-color: #d65f3f;
+}
+
+/* Final Home theme override. Keep this block last so legacy cockpit rules cannot override it. */
+.home-page-personalized {
+  background: transparent;
+}
+
+.home-personalized-container {
+  max-width: 1180px;
+  gap: 16px;
+}
+
+.home-conditions-strip,
+.home-advisory-quote-card,
+.home-confidence-card,
+.home-feedback-card {
+  border-color: #c7d4cd;
+  box-shadow: 0 8px 22px rgba(28, 48, 41, 0.11);
+}
+
+.home-conditions-strip {
+  border-left: 5px solid #d65f3f;
+  background: linear-gradient(135deg, #fffaf4 0%, #f3f7f4 100%);
+}
+
+.home-advisory-quote-card {
+  border-left: 5px solid #5875b7;
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.home-confidence-card {
+  border-top: 4px solid #5875b7;
+  background: linear-gradient(135deg, #f7f9ff 0%, #ffffff 100%);
+}
+
+.home-feedback-card {
+  border-top: 4px solid #c8942d;
+  background: linear-gradient(135deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.home-conditions-district,
+.home-advisory-quote-text,
+.home-feedback-question,
+.home-confidence-reports {
+  color: #263b33;
+}
+
+.home-conditions-sub,
+.home-quick-prompts-label,
+.home-confidence-header,
+.home-advisory-role-badge,
+.home-powered-ai-tag {
+  color: #465a51;
+}
+
+.home-conditions-chip {
+  color: #263b33;
+  background: #e8f0ec;
+  border-color: #c4d3ca;
+}
+
+.home-prompt-chip {
+  color: #263b33;
+  background: #fffdf8;
+  border-color: #c8942d;
+}
+
+.home-prompt-chip:hover {
+  color: #7e3b26;
+  background: #fff0dc;
+  border-color: #d65f3f;
+}
+
+.home-conditions-strip {
+  border-left: 4px solid #d65f3f;
+  background: linear-gradient(105deg, #fffaf5 0%, #ffffff 62%);
+}
+
+.home-conditions-temp {
+  color: #d65f3f;
+  font-weight: 800;
+}
+
+.home-advisory-quote-card {
+  border-left: 4px solid #6b86c4;
+  background: linear-gradient(105deg, #f8fbff 0%, #ffffff 68%);
+}
+
+.home-confidence-card {
+  border-top: 3px solid #6b86c4;
+  background: linear-gradient(150deg, #f7f9ff 0%, #ffffff 70%);
+}
+
+.home-feedback-card {
+  border-top: 3px solid #d6a548;
+  background: linear-gradient(150deg, #fffaf0 0%, #ffffff 70%);
+}
+
+.home-prompt-chip {
+  color: #34463e;
+  background: #ffffff;
+  border-color: #d6a548;
+  box-shadow: 0 3px 10px rgba(31, 51, 43, 0.06);
+}
+
+.home-prompt-chip:hover {
+  color: #1c3029;
+  background: #fff8e8;
+  border-color: #d65f3f;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding-top: 14px;
+  }
+
+  .dashboard-header-bar {
+    padding: 14px;
+  }
+
+  .hero-weather-card-glass {
+    padding: 18px 14px;
+  }
+}
+
 /* ==========================================================================
    PERSONALIZED HOME DASHBOARD COCKPIT (Spec Item 1)
    ========================================================================== */
@@ -4095,4 +4759,143 @@ body {
     padding-left: 12px;
     padding-right: 12px;
   }
+}
+
+/* Keep the final visual hierarchy consistent after legacy page overrides. */
+body,
+.page {
+  color: #39433f;
+}
+
+.dashboard-page-wide {
+  gap: 16px;
+}
+
+.dashboard-main-grid,
+.dashboard-primary-col,
+.dashboard-sidebar-col {
+  gap: 16px;
+}
+
+.dashboard-header-bar,
+.dashboard-section-card,
+.telemetry-panel-card,
+.trust-card,
+.feedback-container,
+.demo-mode-panel,
+.station-card-glass,
+.profile-card,
+.location-card,
+.chat-welcome-card,
+.chat-composer {
+  background: #ffffff;
+  border-color: #d9dfdb;
+  box-shadow: 0 5px 16px rgba(31, 51, 43, 0.07);
+}
+
+.hero-weather-card-glass {
+  background: linear-gradient(135deg, #fffaf4 0%, #f3f7f4 100%);
+  border-color: #e3b8a9;
+  box-shadow: 0 8px 22px rgba(31, 51, 43, 0.08);
+}
+
+.hero-temp-large,
+.feels-value,
+.metric-chip .m-val,
+.tele-val,
+.trust-value,
+.station-temp,
+.hourly-temp,
+.location-cluster-title h2,
+.section-card-header h4,
+.telemetry-panel-card h4,
+.trust-title,
+.demo-title,
+.section-heading,
+.station-name,
+.profile-header h2,
+.group-label {
+  color: #1c3029;
+}
+
+.hero-condition-text,
+.temp-unit,
+.minmax-row,
+.hourly-time,
+.daily-condition,
+.coords-sub,
+.section-subtext,
+.section-meta,
+.tele-label,
+.tele-sub,
+.trust-meta,
+.trust-footer,
+.station-footer-role,
+.profile-field-group .coords-display {
+  color: #65736d;
+}
+
+.hero-feels-box,
+.metric-chip,
+.tele-item,
+.station-stats-row,
+.hourly-chip,
+.daily-forecast-row {
+  background: #f3f6f3;
+  border-color: #dce4df;
+}
+
+.dashboard-section-card {
+  padding: 18px 20px;
+}
+
+.dashboard-primary-col,
+.dashboard-sidebar-col {
+  min-width: 0;
+}
+
+.hourly-forecast-row {
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.hourly-chip {
+  min-width: 76px;
+  padding: 10px 8px;
+  gap: 4px;
+  border-radius: 10px;
+}
+
+.hourly-rain {
+  color: #b54f32;
+  font-size: 10px;
+}
+
+.daily-forecast-row {
+  padding: 9px 10px;
+}
+
+.daily-name,
+.daily-temp-bar .t-min,
+.daily-temp-bar .t-max {
+  color: #263b33;
+}
+
+.btn-primary {
+  background: #d65f3f;
+  box-shadow: 0 4px 12px rgba(214, 95, 63, 0.22);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #34463e;
+  border-color: #c5d1ca;
+}
+
+input,
+select,
+textarea {
+  color: #263b33;
+  background: #ffffff;
+  border-color: #cbd7d0;
 }

@@ -15,13 +15,13 @@ import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getMessaging, isSupported as isMessagingSupported } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDGJ3hRjh_KUrrenQozabfGw1Ci2hvWuQg",
-  authDomain: "meteox-9d084.firebaseapp.com",
-  projectId: "meteox-9d084",
-  storageBucket: "meteox-9d084.firebasestorage.app",
-  messagingSenderId: "95788592543",
-  appId: "1:95788592543:web:099345fd45a427b6ce21aa",
-  measurementId: "G-YTY3J7F7MB"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 export const app = initializeApp(firebaseConfig);

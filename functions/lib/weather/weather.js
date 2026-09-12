@@ -19,7 +19,8 @@ const { info, error } = require("../utils/logger");
 async function getWeather(lat, lng, lang = "en") {
   // Step 1: Check cache
   const cached = await getCachedWeather(lat, lng);
-  if (cached) {
+  // Older cache records predate the hourly timeline and must be refreshed.
+  if (cached && Array.isArray(cached.hourly) && cached.hourly.length > 0) {
     return cached;
   }
 

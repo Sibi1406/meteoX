@@ -9,6 +9,7 @@ const { resolveCluster } = require("../utils/geo");
 function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
   const current = raw.current || {};
   const daily = raw.daily || {};
+  const hourly = raw.hourly || {};
   const cluster = resolveCluster(lat, lng);
 
   const times = daily.time || [];
@@ -18,6 +19,14 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
   const tempMins = daily.temperature_2m_min || [];
   const windMaxs = daily.wind_speed_10m_max || [];
   const codes = daily.weather_code || [];
+  const hourlyForecast = (hourly.time || []).map((time, idx) => ({
+    time,
+    temperatureC: hourly.temperature_2m?.[idx] != null ? Number(hourly.temperature_2m[idx]) : null,
+    rainProbability: hourly.precipitation_probability?.[idx] != null
+      ? Number(hourly.precipitation_probability[idx])
+      : null,
+    weatherCode: hourly.weather_code?.[idx] ?? null,
+  }));
 
   // Build daily forecast list
   const dailyForecasts = times.map((dateStr, idx) => ({
@@ -44,6 +53,7 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
     },
     timestamp: current.time || new Date().toISOString(),
     temperatureC: current.temperature_2m != null ? Number(current.temperature_2m) : (todayForecast.tempMaxC || null),
+    apparentTemperatureC: current.apparent_temperature != null ? Number(current.apparent_temperature) : null,
     rainfallMm: current.precipitation != null ? Number(current.precipitation) : (todayForecast.rainfallMm || 0),
     rainProbability: todayForecast.rainProbability != null ? Number(todayForecast.rainProbability) : (current.precipitation > 0 ? 90 : 10),
     humidityPercent: current.relative_humidity_2m != null ? Number(current.relative_humidity_2m) : null,
@@ -59,6 +69,7 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
     today: todayForecast,
     tomorrow: tomorrowForecast,
     daily: dailyForecasts,
+    hourly: hourlyForecast,
   };
 }
 

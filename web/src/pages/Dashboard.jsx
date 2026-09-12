@@ -1,7 +1,7 @@
 // pages/Dashboard.jsx — Production-Grade Multi-Column Weather & Advisory Dashboard for MeteoX
 import { useState, useEffect } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
-import { api, fetchRealtimeWeather } from "../api";
+import { api, fetchRealtimeWeather, interpretWeatherCode } from "../api";
 import AdvisoryCard from "../components/AdvisoryCard";
 import TrustScore from "../components/TrustScore";
 import AlertCard from "../components/AlertCard";
@@ -104,6 +104,16 @@ export default function Dashboard({ profile }) {
   const tomorrow = weather?.tomorrow;
   const cluster = data?.cluster || clusterData || { displayName: district };
   const alerts = [...(data?.alerts || []), ...(simulatedAlert ? [simulatedAlert] : [])];
+  const hourlyToday = (weather?.hourly || []).slice(0, 24);
+  const dailyForecast = weather?.daily || weather?.dailyForecast || [];
+  const currentCondition = interpretWeatherCode(weather?.weatherCode ?? 0, isTamil);
+
+  function hourLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleTimeString([], { hour: "numeric" });
+  }
 
   return (
     <div className="page dashboard-page-wide">
@@ -144,14 +154,14 @@ export default function Dashboard({ profile }) {
           <div className="hero-weather-card-glass">
             <div className="hero-weather-top">
               <div className="hero-temp-group">
-                <span className="hero-weather-icon">{weather?.weatherIcon || "☀️"}</span>
+                <span className="hero-weather-icon">{currentCondition.icon}</span>
                 <div>
                   <div className="hero-temp-large">
                     {weather?.temperatureC != null ? `${weather.temperatureC}°` : "30°"}
                     <span className="temp-unit">C</span>
                   </div>
                   <div className="hero-condition-text">
-                    {weather?.weatherCondition || "Clear Sky"}
+                    {weather?.weatherCondition || currentCondition.text}
                   </div>
                 </div>
               </div>
@@ -199,19 +209,22 @@ export default function Dashboard({ profile }) {
           </div>
 
           {/* Real-Time Hourly Forecast Row */}
-          {weather?.hourly && weather.hourly.length > 0 && (
+          {hourlyToday.length > 0 && (
             <div className="dashboard-section-card">
               <div className="section-card-header">
-                <h4>⏰ {t("hourlyForecast")}</h4>
-                <span className="section-meta">Next 12 Hours</span>
+                <div>
+                  <h4>⏰ Today, hour by hour</h4>
+                  <p className="section-subtext">Live temperature and rain probability</p>
+                </div>
+                <span className="section-meta">{hourlyToday.length} readings</span>
               </div>
               <div className="hourly-forecast-row">
-                {weather.hourly.map((h, idx) => (
+                {hourlyToday.map((h, idx) => (
                   <div key={idx} className="hourly-chip">
-                    <span className="hourly-time">{h.time}</span>
-                    <span className="hourly-icon">{h.icon}</span>
-                    <span className="hourly-temp">{h.temp}°</span>
-                    <span className="hourly-rain">💧{h.rainProbability}%</span>
+                    <span className="hourly-time">{hourLabel(h.time)}</span>
+                    <span className="hourly-icon">{interpretWeatherCode(h.weatherCode, isTamil).icon}</span>
+                    <span className="hourly-temp">{h.temperatureC ?? "--"}°</span>
+                    <span className="hourly-rain">💧 {h.rainProbability ?? "--"}%</span>
                   </div>
                 ))}
               </div>
@@ -228,30 +241,30 @@ export default function Dashboard({ profile }) {
           </div>
 
           {/* 7-Day Weekly Outlook */}
-          {weather?.dailyForecast && weather.dailyForecast.length > 0 && (
+          {dailyForecast.length > 0 && (
             <div className="dashboard-section-card">
               <div className="section-card-header">
                 <h4>📅 {t("weeklyOutlook")}</h4>
                 <span className="section-meta">Multi-Day Ensemble</span>
               </div>
               <div className="daily-forecast-list">
-                {weather.dailyForecast.map((d, idx) => (
+                {dailyForecast.map((d, idx) => (
                   <div key={idx} className="daily-forecast-row">
-                    <span className="daily-name">{d.dayName}</span>
-                    <span className="daily-icon">{d.icon}</span>
-                    <span className="daily-condition">{d.condition}</span>
+                    <span className="daily-name">{idx === 0 ? "Today" : idx === 1 ? "Tomorrow" : new Date(d.date).toLocaleDateString([], { weekday: "short" })}</span>
+                    <span className="daily-icon">{interpretWeatherCode(d.weatherCode, isTamil).icon}</span>
+                    <span className="daily-condition">{d.weatherCondition || "--"}</span>
                     <span className="daily-rain">💧 {d.rainProbability}%</span>
                     <div className="daily-temp-bar">
-                      <span className="t-min">{d.tempMin}°</span>
+                      <span className="t-min">{d.tempMinC ?? "--"}°</span>
                       <div className="t-bar">
                         <div
                           className="t-fill"
                           style={{
-                            width: `${Math.min(100, Math.max(20, (d.tempMax - d.tempMin) * 8))}%`,
+                            width: `${Math.min(100, Math.max(20, ((d.tempMaxC ?? 0) - (d.tempMinC ?? 0)) * 8))}%`,
                           }}
                         ></div>
                       </div>
-                      <span className="t-max">{d.tempMax}°</span>
+                      <span className="t-max">{d.tempMaxC ?? "--"}°</span>
                     </div>
                   </div>
                 ))}
