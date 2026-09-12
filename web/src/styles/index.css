@@ -2200,8 +2200,8 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
   pointer-events: none;
 }
 .kolam-intro-mark {
-  width: 164px;
-  height: 164px;
+  width: 150px;
+  height: 150px;
   overflow: visible;
   filter: drop-shadow(0 0 12px rgba(94, 63, 50, 0.14));
 }
@@ -2212,21 +2212,13 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 }
 .kolam-dot:nth-child(2n) { animation-delay: 80ms; }
 .kolam-dot:nth-child(3n) { animation-delay: 150ms; }
-.kolam-center {
-  fill: var(--kumkum);
-  stroke: var(--turmeric);
-  stroke-width: 1.6;
-  opacity: 0;
-  animation: kolamDotIn 240ms ease-out 180ms forwards;
-}
 .kolam-thread {
   fill: none;
   stroke: var(--kolam-bronze);
-  stroke-width: 2.5;
+  stroke-width: 2.1;
   stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 420;
-  stroke-dashoffset: 420;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
   animation: kolamDraw 960ms cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
 }
 .kolam-thread:nth-of-type(2) { animation-delay: 260ms; }
@@ -3081,58 +3073,6 @@ body {
 .field input {
   background: rgba(255, 255, 255, 0.58);
   border-color: rgba(123, 135, 174, 0.25);
-}
-
-.onboarding-screen h2,
-.onboarding-screen h3,
-.onboarding-screen .role-label,
-.onboarding-screen .role-desc,
-.onboarding-screen .hint,
-.onboarding-screen .field label,
-.onboarding-screen .gps-trust-line,
-.onboarding-screen .step-badge {
-  color: var(--ink);
-}
-
-.onboarding-screen .role-option-card {
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(123, 135, 174, 0.2);
-}
-
-.onboarding-screen .role-option-card.selected {
-  background: rgba(228, 162, 160, 0.24) !important;
-  border-color: var(--kumkum) !important;
-  box-shadow: 0 0 0 1px var(--kumkum), 0 8px 20px rgba(180, 140, 120, 0.12);
-}
-
-.onboarding-screen .role-option-card.selected .role-label,
-.onboarding-screen .role-option-card.selected .role-desc {
-  color: var(--ink);
-}
-
-.onboarding-screen .role-icon-container {
-  background: rgba(123, 135, 174, 0.12);
-  color: var(--indigo-thread);
-}
-
-.onboarding-screen .role-option-card.selected .role-icon-container {
-  background: var(--kumkum);
-  color: var(--ink);
-}
-
-.onboarding-screen .role-check-indicator {
-  border-color: rgba(123, 135, 174, 0.35);
-}
-
-.onboarding-screen .role-option-card.selected .role-check-indicator {
-  background: var(--kumkum);
-  border-color: var(--kumkum);
-  color: var(--ink);
-}
-
-.onboarding-screen .gps-btn {
-  color: var(--ink);
 }
 
 .station-cards-grid {
