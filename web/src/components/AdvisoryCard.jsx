@@ -1,12 +1,13 @@
-// components/AdvisoryCard.jsx — Role-specific advisory card (Spec §23, §26)
+// components/AdvisoryCard.jsx — Role-specific advisory card
 import { useLanguage } from "../i18n/LanguageContext";
+import RoleIcon from "./RoleIcon";
 
 const ROLE_META = {
-  farmer: { icon: "🌱", colorClass: "role-farmer", defaultTitle: "agriculturalAdvisory" },
-  fisherman: { icon: "🎣", colorClass: "role-fisherman", defaultTitle: "marineAdvisory" },
-  city_admin: { icon: "🏛️", colorClass: "role-city", defaultTitle: "municipalAdvisory" },
-  general: { icon: "🏠", colorClass: "role-general", defaultTitle: "generalAdvisory" },
-  researcher: { icon: "🔬", colorClass: "role-general", defaultTitle: "generalAdvisory" },
+  farmer: { colorClass: "role-farmer", defaultTitle: "agriculturalAdvisory" },
+  fisherman: { colorClass: "role-fisherman", defaultTitle: "marineAdvisory" },
+  city_admin: { colorClass: "role-city", defaultTitle: "municipalAdvisory" },
+  general: { colorClass: "role-general", defaultTitle: "generalAdvisory" },
+  researcher: { colorClass: "role-general", defaultTitle: "generalAdvisory" },
 };
 
 export default function AdvisoryCard({ role = "farmer", advisory, title = null }) {
@@ -15,13 +16,12 @@ export default function AdvisoryCard({ role = "farmer", advisory, title = null }
 
   const meta = ROLE_META[role] || ROLE_META.farmer;
   const headerTitle = title || t(meta.defaultTitle);
-
   const advisoryList = Array.isArray(advisory) ? advisory : [advisory];
 
   return (
     <div className={`advisory-card ${meta.colorClass}`}>
-      <div className="advisory-header">
-        <span className="advisory-icon">{meta.icon}</span>
+      <div className="advisory-header" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <RoleIcon role={role} size={22} />
         <span className="advisory-title">{headerTitle}</span>
       </div>
 

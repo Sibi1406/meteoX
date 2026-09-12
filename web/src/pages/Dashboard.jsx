@@ -1,24 +1,35 @@
 // pages/Dashboard.jsx — Production-Grade Multi-Column Weather & Advisory Dashboard for MeteoX
 import { useState, useEffect } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
-import { api } from "../api";
+import { api, fetchRealtimeWeather } from "../api";
 import AdvisoryCard from "../components/AdvisoryCard";
 import TrustScore from "../components/TrustScore";
 import AlertCard from "../components/AlertCard";
 import Feedback from "../components/Feedback";
 import Loading from "../components/Loading";
+import RoleIcon from "../components/RoleIcon";
+
+const REGIONAL_STATIONS = [
+  { id: "tirunelveli", nameEn: "Tirunelveli", nameTa: "திருநெல்வேலி", lat: 8.7139, lng: 77.7567, role: "Rice & Banana Fields" },
+  { id: "coimbatore", nameEn: "Coimbatore", nameTa: "கோயம்புத்தூர்", lat: 11.0168, lng: 76.9558, role: "Industrial & Agro Hub" },
+  { id: "chennai", nameEn: "Chennai", nameTa: "சென்னை", lat: 13.0827, lng: 80.2707, role: "Coastal Metropolis" },
+  { id: "madurai", nameEn: "Madurai", nameTa: "மதுரை", lat: 9.9252, lng: 78.1198, role: "Heritage & Cotton Belt" },
+  { id: "thanjavur", nameEn: "Thanjavur", nameTa: "தஞ்சாவூர்", lat: 10.7870, lng: 79.1378, role: "Delta Granary" },
+];
 
 export default function Dashboard({ profile }) {
   const { language, t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [simulatedAlert, setSimulatedAlert] = useState(null);
+  const [stationData, setStationData] = useState({});
 
   const lat = profile?.location?.latitude || 8.7139;
   const lng = profile?.location?.longitude || 77.7567;
   const role = profile?.role || "farmer";
   const district = profile?.location?.district || "Tirunelveli";
   const clusterData = profile?.location?.cluster;
+  const isTamil = language === "ta";
 
   useEffect(() => {
     let isMounted = true;
@@ -45,6 +56,27 @@ export default function Dashboard({ profile }) {
       isMounted = false;
     };
   }, [lat, lng, role, language, district, clusterData]);
+
+  // Load Regional Stations weather for Dashboard multi-city grid (Spec Item 1)
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStations() {
+      try {
+        const results = {};
+        for (const s of REGIONAL_STATIONS) {
+          const w = await fetchRealtimeWeather(s.lat, s.lng, isTamil).catch(() => null);
+          if (w) results[s.id] = w;
+        }
+        if (isMounted) setStationData(results);
+      } catch (e) {
+        console.warn("Failed loading regional stations:", e);
+      }
+    }
+    loadStations();
+    return () => {
+      isMounted = false;
+    };
+  }, [isTamil]);
 
   // Hackathon Demo Mode: Trigger simulated severe weather alert
   async function handleTriggerDemoAlert() {
@@ -75,20 +107,23 @@ export default function Dashboard({ profile }) {
 
   return (
     <div className="page dashboard-page-wide">
-      {/* Top Bar Indicator */}
+      {/* Top Bar Indicator with jargon removed */}
       <div className="dashboard-header-bar">
         <div className="location-cluster-title">
           <span className="live-radar-tag">
-            <span className="live-dot-green"></span> LIVE RADAR
+            <span className="live-dot-green"></span> {t("liveWeatherData")}
           </span>
           <h2>{cluster.displayName || district}</h2>
           <span className="coords-sub">
-            {lat.toFixed(2)}°N, {lng.toFixed(2)}°E • {weather?.timestamp || "Updated just now"}
+            {lat.toFixed(2)}°N, {lng.toFixed(2)}°E • {weather?.timestamp || t("updatedAgo")}
           </span>
         </div>
         <div className="header-badges">
-          <span className="role-pill-badge">👤 {t(role)}</span>
-          <span className="source-pill-badge">📡 Open-Meteo & IMD</span>
+          <span className="role-pill-badge" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <RoleIcon role={role} size={16} />
+            <span>{t(role)}</span>
+          </span>
+          <span className="source-pill-badge">📡 {t("liveWeatherData")}</span>
         </div>
       </div>
 
@@ -197,7 +232,7 @@ export default function Dashboard({ profile }) {
             <div className="dashboard-section-card">
               <div className="section-card-header">
                 <h4>📅 {t("weeklyOutlook")}</h4>
-                <span className="section-meta">Open-Meteo Multi-Day Ensemble</span>
+                <span className="section-meta">Multi-Day Ensemble</span>
               </div>
               <div className="daily-forecast-list">
                 {weather.dailyForecast.map((d, idx) => (
@@ -287,6 +322,48 @@ export default function Dashboard({ profile }) {
               ⚡ {t("simulatedDemoAlert")}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Regional Weather Radar (Multi-city grid consolidated here per Spec Item 1) */}
+      <div className="regional-telemetry-container" style={{ marginTop: "16px" }}>
+        <div className="telemetry-header-row">
+          <div>
+            <h3 className="section-heading">{t("liveTelemetryTitle")}</h3>
+            <p className="section-subtext">{t("liveTelemetrySub")}</p>
+          </div>
+          <span className="live-pill">
+            <span className="live-dot-green"></span> {t("liveWeatherData")}
+          </span>
+        </div>
+
+        <div className="station-cards-grid">
+          {REGIONAL_STATIONS.map((st) => {
+            const sData = stationData[st.id];
+            const name = isTamil ? st.nameTa : st.nameEn;
+            return (
+              <div key={st.id} className="station-card-glass">
+                <div className="station-card-top">
+                  <span className="station-name">📍 {name}</span>
+                  <span className="station-condition-icon">{sData?.weatherIcon || "🌤️"}</span>
+                </div>
+                <div className="station-temp-row">
+                  <span className="station-temp">
+                    {sData ? `${sData.temperatureC}°C` : "--"}
+                  </span>
+                  <span className="station-condition-text">
+                    {sData?.weatherCondition || (isTamil ? "ஏற்றப்படுகிறது..." : "Loading...")}
+                  </span>
+                </div>
+                <div className="station-stats-row">
+                  <span>🌧️ {sData ? `${sData.rainProbability}%` : "--"}</span>
+                  <span>💨 {sData ? `${sData.windSpeedKmh} km/h` : "--"}</span>
+                  <span>💦 {sData ? `${sData.humidityPercent}%` : "--"}</span>
+                </div>
+                <div className="station-footer-role">{st.role}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

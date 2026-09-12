@@ -3,7 +3,7 @@
 export const translations = {
   en: {
     appName: "MeteoX",
-    tagline: "Grounded Weather Advisory & Real-Time Intelligence",
+    tagline: "Weather Advisory & Real-Time Intelligence",
     navHome: "Home",
     navDashboard: "Dashboard",
     navChat: "Ask AI",
@@ -25,12 +25,12 @@ export const translations = {
     landingBadge: "⚡ Next-Gen Meteorological Intelligence for Tamil Nadu",
     landingTagline: "Hyperlocal weather forecasts calibrated by real community observations and paired with role-specific agricultural & coastal intelligence.",
     landingTaglineTamil: "உண்மை வானிலை தகவல் மற்றும் துல்லியமான வாழ்வாதார வழிகாட்டல்",
-    featurePill1: "Live Open-Meteo Data",
-    featurePill2: "Grounded Gemini 3.6 AI",
-    featurePill3: "Self-Calibrating Trust",
+    featurePill1: "Live Weather Data",
+    featurePill2: "AI Advisory",
+    featurePill3: "Gets more accurate over time",
     featurePill4: "Tamil First",
     getStarted: "Get Started",
-    exploreGuest: "⚡ Instant Guest Access",
+    exploreGuest: "Instant Guest Access",
     trustedBy: "Empowering Farmers, Fishers & Citizens Across Tamil Nadu",
     signInToContinue: "Access MeteoX",
     previewWeather: "Real-Time Weather",
@@ -40,6 +40,10 @@ export const translations = {
     // Onboarding & Role
     selectRoleTitle: "Select Your Primary Role",
     selectRoleHint: "MeteoX adapts all weather advice to your daily livelihoods and operations",
+    stepIndicator: "Step",
+    of: "of",
+    step1Title: "Choose your primary role",
+    step2Title: "Set your hyperlocal location",
     farmer: "Farmer",
     farmerDesc: "Crop protection, fertilizer timing & irrigation advice",
     fisherman: "Fisherman",
@@ -55,6 +59,7 @@ export const translations = {
     locationTitle: "Location & Cluster",
     useGps: "Detect GPS Location",
     detectingGps: "Acquiring GPS fix...",
+    gpsTrustLine: "Used only for hyperlocal forecasts",
     orSelectDistrict: "Or pick your district:",
     selectDistrict: "Select District",
     continue: "Continue",
@@ -64,12 +69,21 @@ export const translations = {
     askAdvisory: "Ask Advisory AI",
     liveTelemetryTitle: "Tamil Nadu Regional Weather Radar",
     liveTelemetrySub: "Real-time satellite & sensor telemetry across key agricultural and coastal districts",
-    heroBadge: "⚡ Real-Time Weather • Grounded Gemini AI • Self-Calibrating",
+    heroBadge: "⚡ Real-Time Weather • AI Advisory • Self-Calibrating",
     activeRole: "Active Role",
     districtCluster: "District Cluster",
-    mode: "Mode",
-    onlineGrounded: "Online • Grounded",
-    groundedMode: "Grounded Mode",
+    mode: "Status",
+    onlineGrounded: "Status: online",
+    statusOnline: "Status: online",
+    groundedMode: "Farmer mode",
+    roleModeSuffix: "mode",
+    todayAdvisory: "Today's Advisory",
+    poweredByAi: "Powered by AI",
+    yesterdayForecastQuestion: "Was yesterday's forecast right?",
+    forecastConfidence: "Local Forecast Confidence",
+    reportsCount: "reports",
+    quickPromptsLabel: "Quick Prompts for Ask AI",
+    updatedAgo: "Updated just now",
 
     // Dashboard
     dashboardTitle: "Weather & Advisory Dashboard",
@@ -86,6 +100,7 @@ export const translations = {
     pressure: "Pressure",
     uvIndex: "UV Index",
     source: "Source",
+    liveWeatherData: "Live weather data",
     lastUpdated: "Updated",
     localReliability: "Local Forecast Reliability",
     accuracyScore: "Historical Accuracy",
@@ -100,23 +115,55 @@ export const translations = {
     marineAdvisory: "Marine Safety Advisory",
     municipalAdvisory: "Municipal Operational Advisory",
     generalAdvisory: "Weather Advisory",
-    advisoryFootnote: "💡 Powered by Google Gemini 3.6 Flash and verified Open-Meteo data",
+    advisoryFootnote: "💡 Powered by AI & live weather data",
 
     // Chat
-    chatTitle: "MeteoX Advisory AI",
+    chatTitle: "Ask AI",
     chatPlaceholder: "Ask about rain, fertilizer, wind... (e.g. Will it rain tomorrow?)",
     micPlaceholder: "Voice search (Tamil / English)",
+    voiceComingSoon: "Voice input (Coming soon)",
     send: "Send",
-    thinking: "Gemini 3.6 Flash analyzing real-time meteorological telemetry...",
-    weatherFactsTitle: "Real-Time Weather Telemetry",
+    thinking: "Analyzing real-time meteorological data...",
+    weatherFactsTitle: "Real-Time Weather Data",
     advisoryTitle: "Actionable Advisory",
-    groundedBadge: "Grounded AI Check: VERIFIED",
-    chatWelcome: "Hello! I am MeteoX, powered by live Google Gemini 3.6 Flash. Ask me any weather or role advisory question — e.g. \"Will it rain tomorrow in Tirunelveli?\" or \"Can I apply fertilizer tomorrow?\"",
+    groundedBadge: "Checked against live data",
+    chatWelcome: "Hello! I am MeteoX, powered by AI. Ask me any weather or role advisory question — e.g. \"Will it rain tomorrow in Tirunelveli?\" or \"Can I apply fertilizer tomorrow?\"",
     chatError: "Could not retrieve weather data. Please try again.",
+    zeroHallucination: "Grounded in live data",
+
+    // Role-specific quick prompts
+    rolePrompts: {
+      farmer: [
+        "Ask about today's rain",
+        "Check fertilizer timing",
+        "5-day outlook"
+      ],
+      fisherman: [
+        "Check marine wind speed",
+        "Are there high wave alerts?",
+        "Safe fishing hours today"
+      ],
+      city_admin: [
+        "Waterlogging risk today",
+        "Check heat wave advisories",
+        "Storm drain & rainfall outlook"
+      ],
+      general: [
+        "Do I need an umbrella today?",
+        "Today's temperature & humidity",
+        "Weekend weather outlook"
+      ],
+      researcher: [
+        "View forecast confidence & bias",
+        "Local observation count",
+        "Rainfall model comparison"
+      ],
+    },
+
+    // Legacy prompt fallbacks
     quickPrompt1: "Will it rain tomorrow in Tirunelveli?",
     quickPrompt2: "Can I apply fertilizer tomorrow?",
     quickPrompt3: "What is the wind speed for fishing?",
-    zeroHallucination: "Zero AI Hallucination",
 
     // Trust & Feedback
     highConfidence: "High Local Confidence",
@@ -130,6 +177,8 @@ export const translations = {
     feedbackPrompt: "Help calibrate local weather accuracy in your district",
     yesRained: "👍 YES, it rained",
     noRained: "👎 NO rain",
+    yes: "Yes",
+    no: "No",
     feedbackThanks: "Thank you! Your report has been calibrated into local trust.",
 
     // Alerts
@@ -144,7 +193,10 @@ export const translations = {
     saveChanges: "Save Changes",
     saving: "Saving...",
     profileUpdated: "Profile updated successfully!",
-    guestMode: "GUEST MODE",
+    guestMode: "Guest session",
+    guestSession: "Guest session",
+    adapterReady: "Not yet connected",
+    notConnected: "Not yet connected",
 
     // Demo Mode
     demoMode: "Hackathon Demo Mode",
@@ -156,7 +208,7 @@ export const translations = {
     tagline: "உண்மை நேர வானிலை தகவல் மற்றும் வாழ்வாதார ஆலோசனை",
     navHome: "முகப்பு",
     navDashboard: "டாஷ்போர்டு",
-    navChat: "கேள்விகள்",
+    navChat: "AI ஆலோசனை",
     navProfile: "சுயவிவரம்",
 
     // Auth & Landing
@@ -175,12 +227,12 @@ export const translations = {
     landingBadge: "⚡ தமிழ்நாட்டிற்கான உறுதிப்படுத்தப்பட்ட வானிலை நுண்ணறிவு",
     landingTagline: "மக்களின் நேரடி கள அறிக்கைகளால் சுய-சரிசெய்யப்படும் துல்லிய வானிலை முன்னறிவிப்பு மற்றும் வாழ்வாதார வழிகாட்டல்.",
     landingTaglineTamil: "உண்மை வானிலை தகவல் மற்றும் துல்லியமான வாழ்வாதார வழிகாட்டல்",
-    featurePill1: "நேரலை Open-Meteo தரவு",
-    featurePill2: "Gemini 3.6 AI வழிகாட்டல்",
-    featurePill3: "சுய-சரிசெய்யும் நம்பகத்தன்மை",
+    featurePill1: "நேரலை வானிலை தரவு",
+    featurePill2: "AI ஆலோசனை",
+    featurePill3: "பயன்படுத்த பயன்படுத்த துல்லியம் கூடும்",
     featurePill4: "தமிழ் முதன்மை",
     getStarted: "தொடங்குங்கள்",
-    exploreGuest: "⚡ உடனடி விருந்தினர் பயன்முறை",
+    exploreGuest: "உடனடி விருந்தினர் பயன்முறை",
     trustedBy: "தமிழ்நாடு உழவர்கள், மீனவர்கள் & பொதுமக்களுக்கான நம்பகமான தளம்",
     signInToContinue: "MeteoX-க்குள் நுழையவும்",
     previewWeather: "நேரலை வானிலை",
@@ -190,6 +242,10 @@ export const translations = {
     // Onboarding & Role
     selectRoleTitle: "உங்கள் பணியைத் தேர்ந்தெடுக்கவும்",
     selectRoleHint: "உங்கள் தொழிலுக்கு ஏற்ப MeteoX வானிலை ஆலோசனைகளை வழங்கும்",
+    stepIndicator: "படி",
+    of: "இல்",
+    step1Title: "உங்கள் முக்கிய பணியைத் தேர்ந்தெடுக்கவும்",
+    step2Title: "உங்கள் உள்ளூர் இருப்பிடத்தை அமைக்கவும்",
     farmer: "விவசாயி",
     farmerDesc: "உரமிடுதல், பூச்சி மருந்து தெளிப்பு மற்றும் பாசன வழிகாட்டல்",
     fisherman: "மீனவர்",
@@ -205,6 +261,7 @@ export const translations = {
     locationTitle: "இருப்பிடம் மற்றும் பகுதி",
     useGps: "நேரடி GPS இருப்பிடத்தைப் பெறுக",
     detectingGps: "GPS கண்டறியப்படுகிறது...",
+    gpsTrustLine: "உள்ளூர் வானிலை முன்னறிவிப்புக்கு மட்டுமே பயன்படுகிறது",
     orSelectDistrict: "அல்லது உங்கள் மாவட்டத்தைத் தேர்ந்தெடுக்கவும்:",
     selectDistrict: "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்",
     continue: "தொடரவும்",
@@ -214,12 +271,21 @@ export const translations = {
     askAdvisory: "வானிலை ஆலோசனை AI",
     liveTelemetryTitle: "தமிழ்நாடு மண்டல நேரலை வானிலை மையம்",
     liveTelemetrySub: "முக்கிய விவசாய மற்றும் கடலோர மாவட்டங்களின் நேரடி வானிலை நிலவரம்",
-    heroBadge: "⚡ உண்மை நேர வானிலை • Gemini 3.6 AI • தானியங்கி துல்லியம்",
+    heroBadge: "⚡ உண்மை நேர வானிலை • AI ஆலோசனை • தானியங்கி துல்லியம்",
     activeRole: "செயலில் உள்ள பங்கு",
     districtCluster: "மாவட்ட பகுதி",
-    mode: "பயன்முறை",
-    onlineGrounded: "இணையத்தில் • சரிபார்க்கப்பட்டது",
-    groundedMode: "சரிபார்க்கப்பட்ட பயன்முறை",
+    mode: "நிலை",
+    onlineGrounded: "நிலை: பயன்பாட்டில் உள்ளது",
+    statusOnline: "நிலை: பயன்பாட்டில் உள்ளது",
+    groundedMode: "விவசாயி முறை",
+    roleModeSuffix: "முறை",
+    todayAdvisory: "இன்றைய கள ஆலோசனை",
+    poweredByAi: "AI மூலம் இயங்குகிறது",
+    yesterdayForecastQuestion: "நேற்றைய முன்னறிவிப்பு சரியாக இருந்ததா?",
+    forecastConfidence: "உள்ளூர் முன்னறிவிப்பு நம்பிக்கை",
+    reportsCount: "பதிவுகள்",
+    quickPromptsLabel: "விரைவு AI கேள்விகள்",
+    updatedAgo: "சற்று முன் புதுப்பிக்கப்பட்டது",
 
     // Dashboard
     dashboardTitle: "வானிலை மற்றும் ஆலோசனை டாஷ்போர்டு",
@@ -236,6 +302,7 @@ export const translations = {
     pressure: "காற்று அழுத்தம்",
     uvIndex: "UV கதிர்வீச்சு",
     source: "தகவல் மூலம்",
+    liveWeatherData: "நேரலை வானிலை தரவு",
     lastUpdated: "கடைசி புதுப்பிப்பு",
     localReliability: "உள்ளூர் முன்னறிவிப்பு நம்பகத்தன்மை",
     accuracyScore: "வரலாற்று துல்லியம்",
@@ -250,23 +317,55 @@ export const translations = {
     marineAdvisory: "கடல்சார் பாதுகாப்பு ஆலோசனை",
     municipalAdvisory: "நகர செயல்பாட்டு வழிகாட்டல்",
     generalAdvisory: "பொது வானிலை ஆலோசனை",
-    advisoryFootnote: "💡 Google Gemini 3.6 Flash மற்றும் உண்மை நேர Open-Meteo தரவுகளின் அடிப்படையில் வழங்கப்படுகிறது",
+    advisoryFootnote: "💡 AI மற்றும் உண்மை நேர வானிலை தரவுகளின் அடிப்படையில் வழங்கப்படுகிறது",
 
     // Chat
-    chatTitle: "MeteoX AI ஆலோசனை அரட்டை",
+    chatTitle: "AI ஆலோசனை அரட்டை",
     chatPlaceholder: "மழை, உரம், காற்று பற்றி கேட்கவும்... (எ.கா: நாளைக்கு மழை பெய்யுமா?)",
     micPlaceholder: "குரல் வழி தேடல் (தமிழ் / ஆங்கிலம்)",
+    voiceComingSoon: "குரல் வழி பதிவு (விரைவில்)",
     send: "அனுப்பு",
-    thinking: "Gemini 3.6 Flash உண்மை வானிலை தரவுகளை ஆய்வு செய்கிறது...",
+    thinking: "உண்மை வானிலை தரவுகள் ஆய்வு செய்யப்படுகின்றன...",
     weatherFactsTitle: "நேரடி உண்மை வானிலை தகவல்கள்",
     advisoryTitle: "பரிந்துரை வழிகாட்டல்",
-    groundedBadge: "சரிபார்க்கப்பட்ட உண்மை தகவல்: VERIFIED",
-    chatWelcome: "வணக்கம்! நான் MeteoX, நேரலை Google Gemini 3.6 Flash மூலம் இயங்குகிறேன். வானிலை மற்றும் விவசாய ஆலோசனைகள் பற்றி என்னிடம் கேட்கலாம் — எ.கா: \"திருநெல்வேலியில் நாளை மழை பெய்யுமா?\" அல்லது \"நாளை உரம் போடலாமா?\"",
+    groundedBadge: "நேரலை தரவுகளுடன் சரிபார்க்கப்பட்டது",
+    chatWelcome: "வணக்கம்! நான் MeteoX, AI வழிகாட்டலுடன் இயங்குகிறேன். வானிலை மற்றும் தொழில் சார்ந்த ஆலோசனைகள் பற்றி என்னிடம் கேட்கலாம் — எ.கா: \"திருநெல்வேலியில் நாளை மழை பெய்யுமா?\" அல்லது \"நாளை உரம் போடலாமா?\"",
     chatError: "வானிலை தகவல்களைப் பெறுவதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.",
+    zeroHallucination: "நேரலை தரவுகளின் அடிப்படையில்",
+
+    // Role-specific quick prompts
+    rolePrompts: {
+      farmer: [
+        "இன்றைய மழை வாய்ப்பு பற்றி கேள்",
+        "உரமிடுதல் நேரம் சரிபார்க்கவும்",
+        "5 நாள் மழை முன்னறிவிப்பு"
+      ],
+      fisherman: [
+        "கடல் காற்றின் வேகம் சரிபார்க்கவும்",
+        "அலை மற்றும் கடல் எச்சரிக்கைகள்",
+        "மீன்பிடிக்க பாதுகாப்பான நேரம்"
+      ],
+      city_admin: [
+        "இன்றைய மழைநீர் தேங்கும் அபாயம்",
+        "வெப்ப அலை எச்சரிக்கை",
+        "வடிகால் & மழை முன்னறிவிப்பு"
+      ],
+      general: [
+        "இன்று குடை தேவையா?",
+        "இன்றைய வெப்பநிலை மற்றும் ஈரப்பதம்",
+        "வார இறுதி வானிலை"
+      ],
+      researcher: [
+        "முன்னறிவிப்பு துல்லியம் & பதிவுகள்",
+        "மழை மாதிரி சார்பு (Bias)",
+        "மண்டல வானிலை மாறுபாடுகள்"
+      ],
+    },
+
+    // Legacy prompt fallbacks
     quickPrompt1: "திருநெல்வேலியில் நாளை மழை பெய்யுமா?",
     quickPrompt2: "நாளைக்கு உரம் போடலாமா?",
     quickPrompt3: "மீன்பிடிக்க கடலின் காற்றின் வேகம் எப்படி உள்ளது?",
-    zeroHallucination: "AI பிழைகள் அல்லது யூகங்கள் அற்றது",
 
     // Trust & Feedback
     highConfidence: "உயர் உள்ளூர் நம்பிக்கை",
@@ -280,6 +379,8 @@ export const translations = {
     feedbackPrompt: "உங்கள் மாவட்டத்தின் உள்ளூர் வானிலை துல்லியத்தை மேம்படுத்த உதவவும்",
     yesRained: "👍 ஆம், மழை பெய்தது",
     noRained: "👎 மழை இல்லை",
+    yes: "ஆம்",
+    no: "இல்லை",
     feedbackThanks: "நன்றி! உங்கள் பதிவு உள்ளூர் நம்பகத்தன்மை மதிப்பில் சேர்க்கப்பட்டது.",
 
     // Alerts
@@ -294,7 +395,10 @@ export const translations = {
     saveChanges: "மாற்றங்களைச் சேமி",
     saving: "சேமிக்கப்படுகிறது...",
     profileUpdated: "சுயவிவரம் வெற்றிகரமாக புதுப்பிக்கப்பட்டது!",
-    guestMode: "விருந்தினர் முறை",
+    guestMode: "விருந்தினர் அமர்வு",
+    guestSession: "விருந்தினர் அமர்வு",
+    adapterReady: "இணைக்கப்படவில்லை",
+    notConnected: "இணைக்கப்படவில்லை",
 
     // Demo Mode
     demoMode: "ஹேக்கத்தான் டெமோ முறை",

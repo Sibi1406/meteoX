@@ -2,6 +2,7 @@
 // Firebase Console > Project settings > General > Your apps > Web app.
 // See README.md "1. Firebase project setup" for exact steps.
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { 
   getAuth, 
   GoogleAuthProvider, 
@@ -24,6 +25,7 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 // Match the region set in functions/index.js (setGlobalOptions).

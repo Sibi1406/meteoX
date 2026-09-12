@@ -168,7 +168,7 @@ export default function Login({ onLoggedIn }) {
             <div className="card-micro-bar">
               <div className="micro-bar-fill" style={{ width: "80%" }}></div>
             </div>
-            <span className="card-footer-text">Verified Live Open-Meteo Feed</span>
+            <span className="card-footer-text">{t("liveWeatherData")}</span>
           </div>
 
           <div className="landing-card-glass highlight-green">
@@ -179,7 +179,7 @@ export default function Login({ onLoggedIn }) {
             <p className="card-advisory-quote">
               &ldquo;Delay fertilizer and pesticide application. High chance of nutrient runoff before evening rain.&rdquo;
             </p>
-            <span className="card-footer-text">Powered by Google Gemini 3.6 Flash</span>
+            <span className="card-footer-text">{t("poweredByAi")}</span>
           </div>
 
           <div className="landing-card-glass">
@@ -303,7 +303,7 @@ export default function Login({ onLoggedIn }) {
               {/* Instant Guest / Demo Mode */}
               {authMethod === "guest" && (
                 <div className="guest-auth-box">
-                  <p className="auth-subtext">Access MeteoX instantly with live Open-Meteo feeds, Google Gemini 3.6 Flash advisories, and local calibration without entering credentials.</p>
+                  <p className="auth-subtext">Access MeteoX instantly with live weather data, AI advisories, and local calibration without entering credentials.</p>
                   <button className="btn-primary guest-action-btn" onClick={handleGuestLogin} disabled={busy}>
                     🚀 {t("guestSignIn")}
                   </button>

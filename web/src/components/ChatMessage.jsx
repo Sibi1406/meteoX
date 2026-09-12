@@ -1,9 +1,11 @@
-// components/ChatMessage.jsx — Rich message renderer with weather facts, advisory card, and trust score (Spec §27)
+// components/ChatMessage.jsx — Rich message renderer with weather facts, advisory card, and trust score
 import { useLanguage } from "../i18n/LanguageContext";
 import Feedback from "./Feedback";
+import RoleIcon from "./RoleIcon";
 
 export default function ChatMessage({ message, profile, onFeedbackCalibrated }) {
   const { t } = useLanguage();
+  const role = profile?.role || "farmer";
 
   if (message.sender === "user") {
     return (
@@ -25,10 +27,10 @@ export default function ChatMessage({ message, profile, onFeedbackCalibrated }) 
   return (
     <div className="chat-row bot">
       <div className="bubble bot">
-        {/* Natural Language Grounded Answer */}
+        {/* Natural Language Answer */}
         {answer && <div className="bot-answer">{answer}</div>}
 
-        {/* 1. Verified Weather Facts Section (Spec §21, §23) */}
+        {/* 1. Verified Weather Facts Section */}
         {weatherFacts.length > 0 && (
           <div className="chat-facts-block">
             <div className="section-label">🌤️ {t("weatherFactsTitle")}</div>
@@ -42,10 +44,13 @@ export default function ChatMessage({ message, profile, onFeedbackCalibrated }) 
           </div>
         )}
 
-        {/* 2. Role Advisory Section (Spec §21, §23) */}
+        {/* 2. Role Advisory Section with Duotone RoleIcon */}
         {advisoryList.length > 0 && (
           <div className="chat-advisory-block">
-            <div className="section-label">🌱 {t("advisoryTitle")} ({profile?.role || "farmer"})</div>
+            <div className="section-label" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <RoleIcon role={role} size={16} />
+              <span>{t("advisoryTitle")} ({t(role)})</span>
+            </div>
             {advisoryList.map((adv, idx) => (
               <p key={idx} className="advisory-sentence">
                 {adv}
@@ -54,12 +59,12 @@ export default function ChatMessage({ message, profile, onFeedbackCalibrated }) 
           </div>
         )}
 
-        {/* 3. Local Trust Reliability Pill (Spec §27, §42) */}
+        {/* 3. Local Trust Reliability Pill */}
         {localTrust && (
           <div className="chat-trust-pill">
             <span className="trust-pill-icon">🎯</span>
             <span className="trust-pill-score">
-              {t("localReliability")}: {localTrust.trustScore || `${Math.round((localTrust.accuracyScore || 0.81) * 100)}%`}
+              {t("localReliability")}: {localTrust.trustScore || `${Math.round((localTrust.accuracyScore || 0.86) * 100)}%`}
             </span>
             {localTrust.sampleCount != null && (
               <span className="trust-pill-samples">
@@ -69,13 +74,13 @@ export default function ChatMessage({ message, profile, onFeedbackCalibrated }) 
           </div>
         )}
 
-        {/* Grounding Verification Badge (Spec §22) */}
+        {/* Grounding Verification Badge with developer jargon removed */}
         <div className="grounded-badge-row">
           <span className="grounded-tag">✓ {t("groundedBadge")}</span>
-          <span className="grounded-source">Open-Meteo • Zero AI Hallucination</span>
+          <span className="grounded-source">{t("liveWeatherData")} • {t("zeroHallucination")}</span>
         </div>
 
-        {/* 4. One-Tap Verification Feedback (Spec §28) */}
+        {/* 4. One-Tap Verification Feedback */}
         {message.queryId && (
           <div className="chat-feedback-wrapper">
             <Feedback

@@ -86,6 +86,11 @@ export default function LocationSelect({ currentLocation, onSelect }) {
         📍 {busy ? t("detectingGps") : t("useGps")}
       </button>
 
+      <div className="gps-trust-line">
+        <span>🔒</span>
+        <span>{t("gpsTrustLine")}</span>
+      </div>
+
       {error && <p className="error-text">{error}</p>}
 
       <div className="field district-field">

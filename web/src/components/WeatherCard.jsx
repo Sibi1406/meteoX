@@ -17,7 +17,7 @@ export default function WeatherCard({ weather, title = null }) {
       <div className="weather-card-header">
         <span className="weather-title">{cardTitle}</span>
         <span className="weather-badge">
-          {weather.fromCache ? "⚡ Cached" : "🌐 Live Open-Meteo"}
+          {weather.fromCache ? "⚡ Cached" : `🌐 ${t("liveWeatherData")}`}
         </span>
       </div>
 

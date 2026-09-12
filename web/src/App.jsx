@@ -8,6 +8,7 @@ import Login from "./components/Login";
 import RoleSelect from "./components/RoleSelect";
 import LanguageSelect from "./components/LanguageSelect";
 import Loading from "./components/Loading";
+import RoleIcon from "./components/RoleIcon";
 
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -77,7 +78,7 @@ export default function App() {
             </div>
             <div className="brand-live-sub">
               <span className="status-live-dot"></span>
-              <span className="live-sub-text">Live Radar</span>
+              <span className="live-sub-text">{t("liveWeatherData")}</span>
             </div>
           </Link>
 
@@ -121,7 +122,7 @@ export default function App() {
 
             {/* Active Role Pill */}
             <Link to="/profile" className="header-role-pill" title="Edit Profile & Role">
-              <span>{profile.role === "farmer" ? "🌱" : profile.role === "fisherman" ? "🎣" : "🏛️"}</span>
+              <RoleIcon role={profile.role} size={16} />
               <span className="role-name">{t(profile.role)}</span>
             </Link>
 

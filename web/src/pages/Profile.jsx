@@ -1,16 +1,17 @@
-// pages/Profile.jsx — User profile management screen (Spec §6)
+// pages/Profile.jsx — User profile management screen (Spec Item 8)
 import { useState } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useAuth } from "../hooks/useAuth";
 import LocationSelect from "../components/LocationSelect";
 import LanguageSelect from "../components/LanguageSelect";
+import RoleIcon from "../components/RoleIcon";
 
 const ROLES = [
-  { id: "farmer", emoji: "🌾", labelKey: "farmer" },
-  { id: "fisherman", emoji: "🎣", labelKey: "fisherman" },
-  { id: "city_admin", emoji: "🏛️", labelKey: "cityAdmin" },
-  { id: "general", emoji: "🏠", labelKey: "general" },
-  { id: "researcher", emoji: "🔬", labelKey: "researcher" },
+  { id: "farmer", labelKey: "farmer" },
+  { id: "fisherman", labelKey: "fisherman" },
+  { id: "city_admin", labelKey: "cityAdmin" },
+  { id: "general", labelKey: "general" },
+  { id: "researcher", labelKey: "researcher" },
 ];
 
 export default function Profile({ profile, onUpdateProfile }) {
@@ -37,6 +38,11 @@ export default function Profile({ profile, onUpdateProfile }) {
     }
   }
 
+  const isGuest = user?.isAnonymous || !user;
+  const userIdentifier = isGuest
+    ? t("guestSession")
+    : user.phoneNumber || user.email || (user.uid ? `ID: ${user.uid.slice(0, 8)}...` : t("guestSession"));
+
   return (
     <div className="page profile-page">
       <div className="profile-header">
@@ -45,12 +51,13 @@ export default function Profile({ profile, onUpdateProfile }) {
       </div>
 
       <div className="profile-card">
+        {/* User Session Badge with friendly label (Spec Item 8) */}
         <div className="user-id-badge">
-          <span>UID: {user?.uid ? `${user.uid.slice(0, 12)}...` : "Guest User"}</span>
-          {user?.isAnonymous && <span className="demo-tag">{t("guestMode")}</span>}
+          <span>{userIdentifier}</span>
+          {isGuest && <span className="demo-tag">{t("guestMode")}</span>}
         </div>
 
-        {/* Role Selector */}
+        {/* Role Selector with unified Duotone Icons */}
         <div className="profile-field-group">
           <label className="group-label">{t("selectRoleTitle")}</label>
           <div className="role-mini-grid">
@@ -60,7 +67,7 @@ export default function Profile({ profile, onUpdateProfile }) {
                 className={`role-mini-chip ${role === r.id ? "selected" : ""}`}
                 onClick={() => setRole(r.id)}
               >
-                <span>{r.emoji}</span>
+                <RoleIcon role={r.id} size={18} />
                 <span>{t(r.labelKey)}</span>
               </button>
             ))}
@@ -77,21 +84,25 @@ export default function Profile({ profile, onUpdateProfile }) {
           </div>
         </div>
 
-        {/* Channels (Spec §6) */}
+        {/* Delivery Channels with 'Not yet connected' status (Spec Item 8) */}
         <div className="profile-field-group">
           <label className="group-label">{t("deliveryChannels")}</label>
           <div className="channels-list">
             <div className="channel-item active">
-              <span>📱 PWA Push Notifications (FCM)</span>
+              <span>📱 PWA Push Notifications</span>
               <span className="channel-status">Active</span>
             </div>
             <div className="channel-item stub">
               <span>💬 WhatsApp Alerts</span>
-              <span className="channel-status">Adapter Ready</span>
+              <span className="channel-status" style={{ background: "rgba(188, 221, 220, 0.08)", color: "var(--text-muted)" }}>
+                {t("notConnected")}
+              </span>
             </div>
             <div className="channel-item stub">
               <span>✉️ SMS Fallback</span>
-              <span className="channel-status">Adapter Ready</span>
+              <span className="channel-status" style={{ background: "rgba(188, 221, 220, 0.08)", color: "var(--text-muted)" }}>
+                {t("notConnected")}
+              </span>
             </div>
           </div>
         </div>
