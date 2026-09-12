@@ -2203,11 +2203,10 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
   width: 150px;
   height: 150px;
   overflow: visible;
-  filter: drop-shadow(0 0 10px rgba(94, 63, 50, 0.12));
+  filter: drop-shadow(0 0 12px rgba(94, 63, 50, 0.14));
 }
 .kolam-dot {
   fill: var(--kolam-brown);
-  filter: drop-shadow(0 1px 1px rgba(94, 63, 50, 0.2));
   opacity: 0;
   animation: kolamDotIn 220ms ease-out forwards;
 }
@@ -2215,12 +2214,11 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 .kolam-dot:nth-child(3n) { animation-delay: 150ms; }
 .kolam-thread {
   fill: none;
-  stroke: var(--kolam-brown);
-  stroke-width: 2.8;
-  stroke-linecap: square;
-  stroke-linejoin: round;
-  stroke-dasharray: 300;
-  stroke-dashoffset: 300;
+  stroke: var(--kolam-bronze);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
   animation: kolamDraw 960ms cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
 }
 .kolam-thread:nth-of-type(2) { animation-delay: 260ms; }
@@ -3018,75 +3016,6 @@ body {
 .station-temp,
 .card-condition {
   color: var(--accent-teal);
-}
-
-/* Profile controls use the light theme rather than the legacy dark tokens. */
-.profile-page .profile-header h2,
-.profile-page .group-label,
-.profile-page .role-mini-chip,
-.profile-page .channel-item,
-.profile-page .signout-btn {
-  color: var(--ink);
-}
-
-.profile-page .role-mini-chip,
-.profile-page .channel-item {
-  background: rgba(241, 227, 211, 0.5);
-  border-color: rgba(123, 135, 174, 0.18);
-}
-
-.profile-page .role-mini-chip:hover,
-.profile-page .role-mini-chip.selected {
-  background: rgba(228, 162, 160, 0.24);
-  border-color: var(--kumkum);
-  box-shadow: none;
-}
-
-.profile-page .channel-status {
-  color: #526d51;
-  background: rgba(169, 194, 160, 0.32);
-}
-
-.profile-page .channel-item.stub .channel-status {
-  color: var(--text-muted);
-  background: rgba(123, 135, 174, 0.1);
-}
-
-@media (max-width: 560px) {
-  .profile-card {
-    padding: 20px 16px;
-  }
-
-  .profile-header {
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .profile-header h2 {
-    font-size: 22px;
-  }
-
-  .role-mini-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .role-mini-chip,
-  .channel-item {
-    min-width: 0;
-  }
-
-  .channel-item {
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .profile-actions {
-    flex-direction: column;
-  }
-
-  .profile-actions button {
-    width: 100%;
-  }
 }
 
 /* Final cascade guard: keep the visual pass above legacy corrective rules. */
