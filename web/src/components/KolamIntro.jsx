@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 
 const paths = [
-  "M22 50 L22 22 L50 22 L50 38 L62 38 L62 22 L78 22 L78 50 L62 50 L62 62 L78 62 L78 78 L50 78 L50 62 L22 62 L22 50",
-  "M50 18 L82 50 L50 82 L18 50 Z",
-  "M32 50 L32 32 L50 32 L50 50 L68 50 L68 68 L50 68 L50 50 L32 50",
-  "M50 10 L90 50 L50 90 L10 50 Z",
+  "M32 18 C24 18 24 30 32 38 L68 74 C76 82 64 90 56 82 L20 46 C12 38 20 26 28 34 L64 70 C72 78 84 66 76 58 L40 22 C32 14 20 26 28 34",
+  "M68 18 C76 18 76 30 68 38 L32 74 C24 82 36 90 44 82 L80 46 C88 38 80 26 72 34 L36 70 C28 78 16 66 24 58 L60 22 C68 14 80 26 72 34",
+  "M20 46 C12 38 20 26 28 34 M80 46 C88 38 80 26 72 34",
+  "M20 58 C12 66 20 78 28 70 M80 58 C88 66 80 78 72 70",
 ];
 
 const dots = [
-  [18, 18], [50, 18], [82, 18],
-  [18, 50], [50, 50], [82, 50],
-  [18, 82], [50, 82], [82, 82],
-  [32, 32], [68, 32], [32, 68], [68, 68],
+  [32, 18], [68, 18],
+  [20, 38], [80, 38],
+  [20, 62], [80, 62],
+  [32, 82], [68, 82],
 ];
 
 export default function KolamIntro() {
@@ -30,6 +30,7 @@ export default function KolamIntro() {
         {dots.map(([cx, cy]) => (
           <circle key={`${cx}-${cy}`} className="kolam-dot" cx={cx} cy={cy} r="2.3" />
         ))}
+        <circle className="kolam-center" cx="50" cy="50" r="4.2" />
         {paths.map((d, index) => (
           <path key={index} className="kolam-thread" d={d} />
         ))}

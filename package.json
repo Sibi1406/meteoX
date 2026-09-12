@@ -4,7 +4,7 @@
   "description": "MeteoX — Grounded AI Weather & Hyperlocal Climate Intelligence Platform",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix web run dev",
+    "dev": "npm --prefix web run dev --",
     "build": "npm --prefix web run build",
     "test": "npm --prefix functions test",
     "seed": "node scripts/seedDemoData.js",
