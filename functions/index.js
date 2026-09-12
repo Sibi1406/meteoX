@@ -21,14 +21,13 @@ const { info, error } = require("./lib/utils/logger");
 
 setGlobalOptions({ region: "asia-south1", maxInstances: 10 });
 
-const geminiKey = defineSecret("GEMINI_API_KEY");
 const bhashiniKey = defineSecret("BHASHINI_API_KEY");
 
 // ---------------------------------------------------------------------------
 // 1. handleQuery — End-to-End Query Understanding -> RAG -> Gemini -> Grounding
 // ---------------------------------------------------------------------------
 exports.handleQuery = onCall(
-  { secrets: [geminiKey, bhashiniKey] },
+  { secrets: [bhashiniKey] },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Please sign in to access WeatherGPT.");
