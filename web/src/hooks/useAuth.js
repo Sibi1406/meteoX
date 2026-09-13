@@ -31,15 +31,8 @@ export function useAuth() {
       const cred = await signInAnonymously(auth);
       return cred.user;
     } catch (err) {
-      // If anonymous auth is not enabled in Firebase console, allow client demo session
-      console.warn("Firebase anonymous auth fallback to mock user:", err);
-      const mockUser = {
-        uid: `guest_${Date.now()}`,
-        isAnonymous: true,
-        displayName: "Guest Farmer",
-      };
-      setUser(mockUser);
-      return mockUser;
+      setAuthError(err.message);
+      throw err;
     }
   }
 
