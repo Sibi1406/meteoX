@@ -3174,6 +3174,38 @@ body {
   gap: 16px;
 }
 
+.home-intelligence-page .dashboard-main-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.home-intelligence-page .dashboard-primary-col {
+  gap: 18px;
+}
+
+.home-intelligence-page .hero-weather-card-glass {
+  width: 100%;
+}
+
+.home-outlook-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  align-items: start;
+  gap: 16px;
+}
+
+.home-outlook-layout .dashboard-sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.home-outlook-layout .trust-score-section,
+.home-outlook-layout .dashboard-feedback-section,
+.home-outlook-layout .demo-mode-panel {
+  min-width: 0;
+}
+
 .dashboard-main-grid {
   gap: 16px;
 }
@@ -3512,6 +3544,18 @@ body {
 
 .daily-forecast-row {
   padding: 9px 10px;
+}
+
+@media (max-width: 900px) {
+  .home-outlook-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 290px);
+  }
+}
+
+@media (max-width: 720px) {
+  .home-outlook-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .daily-name,

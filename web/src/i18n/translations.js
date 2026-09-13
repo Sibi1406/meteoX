@@ -5,7 +5,6 @@ export const translations = {
     appName: "MeteoX",
     tagline: "Weather Advisory & Real-Time Intelligence",
     navHome: "Home",
-    navDashboard: "Dashboard",
     navChat: "Ask AI",
     navProfile: "Profile",
 
@@ -207,7 +206,6 @@ export const translations = {
     appName: "MeteoX",
     tagline: "உண்மை நேர வானிலை தகவல் மற்றும் வாழ்வாதார ஆலோசனை",
     navHome: "முகப்பு",
-    navDashboard: "டாஷ்போர்டு",
     navChat: "AI ஆலோசனை",
     navProfile: "சுயவிவரம்",
 

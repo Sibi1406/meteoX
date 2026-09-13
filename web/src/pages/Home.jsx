@@ -1,236 +1,133 @@
-// pages/Home.jsx — Hyperlocal & Role-Specific Home Cockpit for MeteoX (Spec Item 1)
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// pages/Home.jsx - MeteoX weather intelligence home
+import { useEffect, useState } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
-import { api } from "../api";
+import { api, interpretWeatherCode } from "../api";
+import AdvisoryCard from "../components/AdvisoryCard";
+import AlertCard from "../components/AlertCard";
+import Feedback from "../components/Feedback";
+import Loading from "../components/Loading";
 import RoleIcon from "../components/RoleIcon";
+import TrustScore from "../components/TrustScore";
 
 export default function Home({ profile }) {
   const { language, t } = useLanguage();
-  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [simulatedAlert, setSimulatedAlert] = useState(null);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
-  const role = profile?.role || "farmer";
-  const district = profile?.location?.district || "Tirunelveli";
   const lat = profile?.location?.latitude || 8.7139;
   const lng = profile?.location?.longitude || 77.7567;
-  const cluster = profile?.location?.cluster;
-
-  const [loading, setLoading] = useState(true);
-  const [weatherData, setWeatherData] = useState(null);
-  const [roleAdvisory, setRoleAdvisory] = useState("");
-  const [trustScore, setTrustScore] = useState(null);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const role = profile?.role || "farmer";
+  const district = profile?.location?.district || "Tirunelveli";
+  const clusterData = profile?.location?.cluster;
+  const isTamil = language === "ta";
 
   useEffect(() => {
     let isMounted = true;
-    async function loadHomeCockpit() {
+    async function loadWeather() {
       setLoading(true);
       try {
-        const result = await api.getWeatherDashboard({
-          lat,
-          lng,
-          role,
-          languageCode: language,
-          district,
-          cluster,
-        });
-        if (isMounted) {
-          setWeatherData(result?.weather);
-          setRoleAdvisory(result?.roleAdvisory || "");
-          setTrustScore(result?.trustScore || { accuracyScore: 0.86, sampleCount: 48 });
-        }
-      } catch (e) {
-        console.warn("Failed loading home cockpit data:", e);
+        const result = await api.getWeatherDashboard({ lat, lng, role, languageCode: language, district, cluster: clusterData });
+        if (isMounted) setData(result);
+      } catch (err) {
+        console.error("Failed to load home weather intelligence:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
     }
+    loadWeather();
+    return () => { isMounted = false; };
+  }, [lat, lng, role, language, district, clusterData]);
 
-    loadHomeCockpit();
-    return () => {
-      isMounted = false;
-    };
-  }, [lat, lng, role, language, district, cluster]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  async function handleOneTapFeedback(answer) {
-    if (submittingFeedback || feedbackSubmitted) return;
-    setSubmittingFeedback(true);
+  async function handleTriggerDemoAlert() {
     try {
-      const todayDate = new Date().toISOString().split("T")[0];
-      const res = await api.submitFeedback({
-        forecastId: `home_${district.toLowerCase()}_${todayDate}`,
-        answer,
-        predictedRain: (weatherData?.rainProbability ?? 20) > 30,
-        lat,
-        lng,
-        role,
-        district,
-      });
-      setFeedbackSubmitted(true);
-      if (res?.calibration) {
-        setTrustScore(res.calibration);
-      }
+      const demoRes = await api.triggerDemoAlert({ alertType: "heavy_rain", role, language });
+      setSimulatedAlert(demoRes.alert);
     } catch (err) {
-      console.error("Feedback error:", err);
-      setFeedbackSubmitted(true);
-    } finally {
-      setSubmittingFeedback(false);
+      console.error("Demo alert error:", err);
     }
   }
 
-  function handlePromptClick(promptText) {
-    navigate("/chat", { state: { initialPrompt: promptText } });
+  if (loading) {
+    return <div className="dashboard-loading-view"><Loading message={t("loadingDashboard")} /></div>;
   }
 
-  // Retrieve role-aware prompts from dictionary
-  const rawRolePrompts = t("rolePrompts");
-  const quickPrompts =
-    (rawRolePrompts && typeof rawRolePrompts === "object" && rawRolePrompts[role]) || [
-      t("quickPrompt1"),
-      t("quickPrompt2"),
-      t("quickPrompt3"),
-    ];
+  const weather = data?.weather;
+  const tomorrow = weather?.tomorrow;
+  const cluster = data?.cluster || clusterData || { displayName: district };
+  const alerts = [...(data?.alerts || []), ...(simulatedAlert ? [simulatedAlert] : [])];
+  const currentDate = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, "0")}-${String(currentTime.getDate()).padStart(2, "0")}`;
+  const currentHour = currentTime.getHours();
+  const hourlyToday = (weather?.hourly || []).filter((hour) => {
+    const match = typeof hour.time === "string" && hour.time.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})/);
+    if (!match) return false;
+    const hourDate = match[1];
+    const hourValue = Number(match[2]);
+    return hourDate === currentDate && hourValue >= currentHour && hourValue <= 23;
+  });
+  const dailyForecast = weather?.daily || weather?.dailyForecast || [];
+  const currentCondition = interpretWeatherCode(weather?.weatherCode ?? 0, isTamil);
 
-  const confidencePercent = trustScore?.accuracyScore != null
-    ? Math.round(trustScore.accuracyScore * 100)
-    : 86;
-  const reportsCount = trustScore?.sampleCount ?? 48;
+  function hourLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString([], { hour: "numeric" });
+  }
 
   return (
-    <div className="page home-page-personalized">
-      <div className="home-personalized-container">
-        {/* 1. Compact Current-Conditions Strip for user's own district only */}
-        <section className="home-conditions-strip" aria-label="Current Weather Strip">
-          <div className="home-conditions-primary">
-            <span className="home-conditions-icon">
-              {weatherData?.weatherIcon || "⛅"}
-            </span>
-            <div className="home-conditions-main">
-              <div className="home-conditions-headline">
-                <h2 className="home-conditions-district">{district}</h2>
-                <span className="home-conditions-temp">
-                  {weatherData?.temperatureC != null ? `${weatherData.temperatureC}°C` : "--°C"}
-                </span>
+    <div className="page dashboard-page-wide home-intelligence-page">
+      <div className="dashboard-header-bar">
+        <div className="location-cluster-title">
+          <span className="live-radar-tag"><span className="live-dot-green"></span> {t("liveWeatherData")}</span>
+          <h2>{cluster.displayName || district}</h2>
+          <span className="coords-sub">{lat.toFixed(2)}°N, {lng.toFixed(2)}°E • {weather?.timestamp || t("updatedAgo")}</span>
+        </div>
+        <div className="header-badges">
+          <span className="role-pill-badge" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><RoleIcon role={role} size={16} /><span>{t(role)}</span></span>
+          <span className="source-pill-badge">📡 {t("liveWeatherData")}</span>
+        </div>
+      </div>
+
+      {alerts.length > 0 && <div className="alerts-section">{alerts.map((alert, index) => <AlertCard key={index} alert={alert} />)}</div>}
+
+      <div className="dashboard-main-grid">
+        <div className="dashboard-primary-col">
+          <div className="hero-weather-card-glass">
+            <div className="hero-weather-top">
+              <div className="hero-temp-group">
+                <span className="hero-weather-icon">{currentCondition.icon}</span>
+                <div><div className="hero-temp-large">{weather?.temperatureC != null ? `${weather.temperatureC}°` : "--°"}<span className="temp-unit">C</span></div><div className="hero-condition-text">{weather?.weatherCondition || currentCondition.text}</div></div>
               </div>
-              <div className="home-conditions-sub">
-                <span>{weatherData?.weatherCondition || (language === "ta" ? "பகுதி மேகமூட்டம்" : "Partly cloudy")}</span>
-                <span>•</span>
-                <span>{t("feelsLike")} {weatherData?.apparentTemperatureC ?? weatherData?.temperatureC ?? 31}°C</span>
-                <span>•</span>
-                <span>{weatherData?.timestamp ? `${t("lastUpdated")} ${weatherData.timestamp}` : t("updatedAgo")}</span>
-              </div>
+              <div className="hero-feels-box"><div className="feels-label">{t("feelsLike")}</div><div className="feels-value">{weather?.apparentTemperatureC ?? "--"}°C</div><div className="minmax-row"><span>H: {weather?.today?.tempMaxC ?? "--"}°</span><span>L: {weather?.today?.tempMinC ?? "--"}°</span></div></div>
+            </div>
+            <div className="hero-metrics-strip">
+              <div className="metric-chip"><span className="m-icon">🌧️</span><div><span className="m-label">{t("rainProbability")}</span><span className="m-val">{weather?.rainProbability ?? "--"}%</span></div></div>
+              <div className="metric-chip"><span className="m-icon">💧</span><div><span className="m-label">{t("rainfall")}</span><span className="m-val">{weather?.rainfallMm ?? "--"} mm</span></div></div>
+              <div className="metric-chip"><span className="m-icon">💨</span><div><span className="m-label">{t("windSpeed")}</span><span className="m-val">{weather?.windSpeedKmh ?? "--"} km/h</span></div></div>
+              <div className="metric-chip"><span className="m-icon">💦</span><div><span className="m-label">{t("humidity")}</span><span className="m-val">{weather?.humidityPercent ?? "--"}%</span></div></div>
             </div>
           </div>
 
-          <div className="home-conditions-telemetry">
-            <div className="home-conditions-chip" title={t("rainProbability")}>
-              <span>🌧️</span>
-              <span>{weatherData?.rainProbability ?? 15}%</span>
-            </div>
-            <div className="home-conditions-chip" title={t("windSpeed")}>
-              <span>💨</span>
-              <span>{weatherData?.windSpeedKmh ?? 12} km/h</span>
-            </div>
-            <div className="home-conditions-chip" title={t("humidity")}>
-              <span>💦</span>
-              <span>{weatherData?.humidityPercent ?? 65}%</span>
-            </div>
-          </div>
-        </section>
+          {hourlyToday.length > 0 && <div className="dashboard-section-card"><div className="section-card-header"><div><h4>⏰ Today, hour by hour</h4><p className="section-subtext">Live temperature and rain probability</p></div><span className="section-meta">{hourlyToday.length} readings</span></div><div className="hourly-forecast-row">{hourlyToday.map((hour, index) => <div key={index} className="hourly-chip"><span className="hourly-time">{hourLabel(hour.time)}</span><span className="hourly-icon">{interpretWeatherCode(hour.weatherCode, isTamil).icon}</span><span className="hourly-temp">{hour.temperatureC ?? "--"}°</span><span className="hourly-rain">💧 {hour.rainProbability ?? "--"}%</span></div>)}</div></div>}
 
-        {/* 2. Today's Advisory Card (Role-specific, quote-card visual style with "Powered by AI" tag) */}
-        <section className="home-advisory-quote-card" aria-label="Today's Advisory">
-          <div className="home-advisory-header">
-            <div className="home-advisory-role-badge">
-              <RoleIcon role={role} size={20} />
-              <span>{t(role)} • {t("todayAdvisory")}</span>
-            </div>
-            <span className="home-powered-ai-tag">
-              🤖 {t("poweredByAi")}
-            </span>
-          </div>
+          <div className="prominent-advisory-section"><AdvisoryCard role={role} advisory={data?.roleAdvisory} title={role === "farmer" ? t("agriculturalAdvisory") : null} /></div>
 
-          <p className="home-advisory-quote-text">
-            &ldquo;
-            {roleAdvisory ||
-              (language === "ta"
-                ? `${district} பகுதியில் வானிலை சீராக உள்ளது. வழமையான களப்பணிகளை மேற்கொள்ளலாம்.`
-                : `Favorable weather conditions across ${district}. Normal field operations may proceed.`)}
-            &rdquo;
-          </p>
-        </section>
-
-        {/* 3 & 4. Local Confidence Metric + One-Tap Self-Calibrating Feedback */}
-        <div className="home-trust-feedback-row">
-          {/* Local forecast confidence metric for user's own district */}
-          <div className="home-confidence-card">
-            <div className="home-confidence-header">
-              <span>🎯</span>
-              <span>{t("forecastConfidence")}</span>
-            </div>
-            <div className="home-confidence-stat-row">
-              <span className="home-confidence-value">{confidencePercent}%</span>
-              <span className="home-confidence-reports">
-                ({reportsCount} {t("reportsCount")} in {district})
-              </span>
-            </div>
-            <p className="section-subtext" style={{ fontSize: "12px", margin: 0 }}>
-              {t("selfCalibratingNote")}
-            </p>
-          </div>
-
-          {/* One-tap feedback prompt: Was yesterday's forecast right? */}
-          <div className="home-feedback-card">
-            <div className="home-feedback-question">
-              <span>📊</span>
-              <span>{t("yesterdayForecastQuestion")}</span>
-            </div>
-
-            {feedbackSubmitted ? (
-              <div className="home-feedback-thanks">
-                <span>✓</span>
-                <span>{t("feedbackThanks")}</span>
-              </div>
-            ) : (
-              <div className="home-feedback-actions">
-                <button
-                  className="home-feedback-btn yes"
-                  onClick={() => handleOneTapFeedback("yes")}
-                  disabled={submittingFeedback}
-                >
-                  👍 {t("yes")}
-                </button>
-                <button
-                  className="home-feedback-btn no"
-                  onClick={() => handleOneTapFeedback("no")}
-                  disabled={submittingFeedback}
-                >
-                  👎 {t("no")}
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* 5. Quick-Prompt Chips into Ask AI tailored to the active role */}
-        <section className="home-quick-prompts-section" aria-label="Quick Prompts into Ask AI">
-          <div className="home-quick-prompts-label">
-            💬 {t("quickPromptsLabel")}
+        <div className="home-outlook-layout">
+          {dailyForecast.length > 0 && <div className="dashboard-section-card home-outlook-card"><div className="section-card-header"><h4>📅 {t("weeklyOutlook")}</h4><span className="section-meta">Multi-Day Ensemble</span></div><div className="daily-forecast-list">{dailyForecast.map((day, index) => <div key={index} className="daily-forecast-row"><span className="daily-name">{index === 0 ? "Today" : index === 1 ? "Tomorrow" : new Date(day.date).toLocaleDateString([], { weekday: "short" })}</span><span className="daily-icon">{interpretWeatherCode(day.weatherCode, isTamil).icon}</span><span className="daily-condition">{day.weatherCondition || "--"}</span><span className="daily-rain">💧 {day.rainProbability ?? "--"}%</span><div className="daily-temp-bar"><span className="t-min">{day.tempMinC ?? "--"}°</span><div className="t-bar"><div className="t-fill" style={{ width: `${Math.min(100, Math.max(20, ((day.tempMaxC ?? 0) - (day.tempMinC ?? 0)) * 8))}%` }}></div></div><span className="t-max">{day.tempMaxC ?? "--"}°</span></div></div>)}</div></div>}
+
+          <div className="dashboard-sidebar-col">
+            <div className="trust-score-section"><TrustScore trustData={data?.trustScore} clusterName={cluster.displayName || district} /></div>
+            <div className="dashboard-feedback-section"><Feedback forecastId={`home_${cluster.clusterId || district.toLowerCase()}_${tomorrow?.date || "today"}`} lat={lat} lng={lng} role={role} district={district} onCalibrated={(newScore) => setData((previous) => ({ ...previous, trustScore: { ...previous?.trustScore, ...newScore } }))} /></div>
+            <div className="demo-mode-panel"><div className="demo-header"><span className="demo-icon">🧪</span><span className="demo-title">{t("demoMode")}</span></div><p className="demo-desc">{t("demoModeDesc")}</p><button className="btn-secondary demo-trigger-btn" onClick={handleTriggerDemoAlert}>⚡ {t("simulatedDemoAlert")}</button></div>
           </div>
-          <div className="home-quick-prompts-row">
-            {quickPrompts.map((promptText, idx) => (
-              <button
-                key={idx}
-                className="home-prompt-chip"
-                onClick={() => handlePromptClick(promptText)}
-              >
-                <span>✨</span>
-                <span>{promptText}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,6 @@ import Loading from "./components/Loading";
 import RoleIcon from "./components/RoleIcon";
 
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
 import ChatPage from "./pages/ChatPage";
 import Profile from "./pages/Profile";
 
@@ -88,10 +87,6 @@ export default function App() {
               <span className="d-icon">🏠</span>
               <span>{t("navHome")}</span>
             </NavLink>
-            <NavLink to="/dashboard" className={({ isActive }) => `desktop-nav-link ${isActive ? "active" : ""}`}>
-              <span className="d-icon">📊</span>
-              <span>{t("navDashboard")}</span>
-            </NavLink>
             <NavLink to="/chat" className={({ isActive }) => `desktop-nav-link ${isActive ? "active" : ""}`}>
               <span className="d-icon">💬</span>
               <span>{t("navChat")}</span>
@@ -136,13 +131,12 @@ export default function App() {
       <main className="page-container">
         <Routes>
           <Route path="/" element={<Home profile={profile} />} />
-          <Route path="/dashboard" element={<Dashboard profile={profile} />} />
           <Route path="/chat" element={<ChatPage profile={profile} />} />
           <Route
             path="/profile"
             element={<Profile profile={profile} onUpdateProfile={updateProfile} />}
           />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
@@ -151,13 +145,6 @@ export default function App() {
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
           <span className="nav-icon">🏠</span>
           <span>{t("navHome")}</span>
-        </NavLink>
-        <NavLink
-          to="/dashboard"
-          className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
-        >
-          <span className="nav-icon">📊</span>
-          <span>{t("navDashboard")}</span>
         </NavLink>
         <NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
           <span className="nav-icon">💬</span>
