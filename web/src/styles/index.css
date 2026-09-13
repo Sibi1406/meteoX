@@ -4252,6 +4252,32 @@ textarea {
   animation: pulseDot 1.5s infinite;
 }
 
+.bot-answer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.bot-answer-row .bot-answer {
+  flex: 1;
+}
+
+.speak-btn {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.speak-btn:hover,
+.speak-btn:focus-visible {
+  color: var(--text);
+}
+
 /* Extra Mobile Optimizations for ~375px screens (Spec Item 7) */
 @media (max-width: 480px) {
   .topbar-inner {

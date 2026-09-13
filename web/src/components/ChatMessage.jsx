@@ -3,7 +3,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 import Feedback from "./Feedback";
 import RoleIcon from "./RoleIcon";
 
-export default function ChatMessage({ message, profile, onFeedbackCalibrated }) {
+export default function ChatMessage({ message, profile, onSpeak, speaking, onFeedbackCalibrated }) {
   const { t } = useLanguage();
   const role = profile?.role || "farmer";
 
@@ -28,7 +28,22 @@ export default function ChatMessage({ message, profile, onFeedbackCalibrated }) 
     <div className="chat-row bot">
       <div className="bubble bot">
         {/* Natural Language Answer */}
-        {answer && <div className="bot-answer">{answer}</div>}
+        {answer && (
+          <div className="bot-answer-row">
+            <div className="bot-answer">{answer}</div>
+            {onSpeak && (
+              <button
+                type="button"
+                className="speak-btn"
+                onClick={() => onSpeak(answer)}
+                title={speaking ? t("stopSpeaking") : t("speakAnswer")}
+                aria-label={speaking ? t("stopSpeaking") : t("speakAnswer")}
+              >
+                {speaking ? "⏹" : "🔊"}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* 1. Verified Weather Facts Section */}
         {weatherFacts.length > 0 && (

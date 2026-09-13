@@ -22,6 +22,7 @@ export default function Chat({ profile }) {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const logRef = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -142,6 +143,7 @@ export default function Chat({ profile }) {
         const transcript = event.results[0]?.[0]?.transcript;
         if (transcript) {
           setInput(transcript);
+          handleSend(transcript);
         }
       };
 
@@ -151,6 +153,24 @@ export default function Chat({ profile }) {
       console.warn("Could not start speech recognition:", e);
       setListening(false);
     }
+  }
+
+  function handleSpeak(text) {
+    if (!window.speechSynthesis || !text) return;
+
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "ta" ? "ta-IN" : "en-IN";
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
   }
 
   const isInitialState = messages.length === 1 && messages[0].isWelcome;
@@ -213,6 +233,8 @@ export default function Chat({ profile }) {
               key={idx}
               message={m}
               profile={profile}
+              onSpeak={handleSpeak}
+              speaking={speaking}
               onFeedbackCalibrated={(newScore) => {
                 // Feedback calibrated
               }}
