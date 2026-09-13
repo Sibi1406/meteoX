@@ -42,7 +42,7 @@ Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences
       ? `{ "trustScore": "${Math.round((context.localTrust.trustScore || 0.8) * 100)}%", "sampleCount": ${context.localTrust.sampleCount || 0}, "note": "${isTamil ? 'உள்ளூர் நம்பகத்தன்மை' : 'Local reliability'}" }`
       : `null`
   },
-  "answer": "A clear, natural, and helpful answer in ${isTamil ? 'Tamil' : 'English'} answering the user question while strictly referencing the weather facts above."
+  "answer": "A very simple answer in ${isTamil ? 'Tamil' : 'English'} for an ordinary person. Use only 1 or 2 short sentences, maximum 25 words. Answer the user's question directly, use everyday words, and do not repeat the weather facts or advisory section."
 }
 `.trim();
 }
@@ -115,8 +115,8 @@ async function generateAdvisoryWithGrounding({ query, context }) {
         }
       : null,
     answer: isTamil
-      ? "கிடைக்கப்பெற்ற வானிலை தகவலின் அடிப்படையில் உங்களின் கேள்விக்குரிய பரிந்துரை வழங்கப்பட்டுள்ளது."
-      : "Based on verified meteorological observations, here are the current weather conditions and advisory.",
+      ? "உங்கள் கேள்விக்கான பதிலை கீழே உள்ள வானிலை தகவல்களில் பார்க்கலாம்."
+      : "Here is the simple answer based on the latest weather information.",
     confidence: "medium",
     isFallback: true,
   };
