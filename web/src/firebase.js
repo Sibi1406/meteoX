@@ -25,7 +25,16 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const analytics = getAnalytics(app);
+let analyticsInstance = null;
+const isLocalhost = typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+if (!isLocalhost) {
+  try {
+    analyticsInstance = getAnalytics(app);
+  } catch (error) {
+    console.warn("Firebase analytics is unavailable in this browser session.", error);
+  }
+}
+export const analytics = analyticsInstance;
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 // Match the region set in functions/index.js (setGlobalOptions).

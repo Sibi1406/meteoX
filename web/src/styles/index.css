@@ -12,14 +12,15 @@
 */
 
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;0,9..144,800;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Catamaran:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap");
 
 :root {
   /* Exact Reference Color Palette */
-  --sapphire: #E56D4B;
+  --sapphire: #6E1F2E;
   --arctic: #6B6B67;
   --lace: #FFFFFF;
-  --bubblegum: #F2C6B8;
-  --ballet: #E56D4B;
+  --bubblegum: #D9B4BC;
+  --ballet: #6E1F2E;
   --sage: #C8B98A;
   --pistachio: #B08A3C;
   --spruce: #555553;
@@ -40,7 +41,7 @@
   --glass-bg: rgba(255, 255, 255, 0.92);
   --glass-bg-hover: rgba(241, 247, 245, 0.96);
   --glass-border: rgba(53, 53, 53, 0.12);
-  --glass-border-focus: rgba(229, 109, 75, 0.65);
+  --glass-border-focus: rgba(110, 31, 46, 0.65);
   --glass-blur: blur(16px);
   --glass-shadow: 0 16px 40px rgba(25, 55, 50, 0.10);
 
@@ -50,9 +51,9 @@
   --text-muted: #777773;
   --text-dim: #999994;
 
-  /* Unified Brand Teal Accent */
-  --accent-teal: #E56D4B;
-  --accent-teal-bright: #D85A3B;
+  /* Unified Brand Maroon Accent */
+  --accent-teal: #6E1F2E;
+  --accent-teal-bright: #551821;
 
   /* Radii */
   --radius-xs: 6px;
@@ -65,8 +66,8 @@
   --shadow-sm: 0 2px 8px rgba(25, 55, 50, 0.08);
   --shadow-md: 0 8px 24px rgba(25, 55, 50, 0.10);
   --shadow-lg: 0 16px 48px rgba(25, 55, 50, 0.14);
-  --glow-sapphire: 0 0 20px rgba(229, 109, 75, 0.18);
-  --glow-ballet: 0 0 20px rgba(229, 109, 75, 0.18);
+  --glow-sapphire: 0 0 20px rgba(110, 31, 46, 0.18);
+  --glow-ballet: 0 0 20px rgba(110, 31, 46, 0.18);
   --glow-pistachio: 0 0 20px rgba(176, 138, 60, 0.18);
 }
 
@@ -89,7 +90,7 @@ body {
   min-height: 100vh;
   background: var(--bg-deep);
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(229, 109, 75, 0.08), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(110, 31, 46, 0.08), transparent),
     radial-gradient(circle 600px at 10% 20%, rgba(220, 220, 216, 0.24), transparent),
     linear-gradient(180deg, #FFFFFF 0%, #F3F3F1 100%);
   background-attachment: fixed;
@@ -640,13 +641,13 @@ a {
 .alert-card {
   border-radius: var(--radius);
   padding: 16px 20px;
-  background: rgba(254, 145, 121, 0.12);
+  background: rgba(110, 31, 46, 0.12);
   border: 1.5px solid var(--ballet);
   box-shadow: var(--glow-ballet);
 }
 
 .alert-card.high {
-  background: rgba(254, 145, 121, 0.15);
+  background: rgba(110, 31, 46, 0.15);
   border-color: var(--ballet);
 }
 
@@ -1123,7 +1124,7 @@ a {
 .demo-badge {
   font-size: 10px;
   font-weight: 700;
-  background: rgba(254, 145, 121, 0.2);
+  background: rgba(110, 31, 46, 0.2);
   border: 1px solid var(--ballet);
   color: var(--lace);
   padding: 3px 8px;
@@ -1270,13 +1271,13 @@ a {
 }
 
 .btn-feedback.no {
-  background: rgba(254, 145, 121, 0.18);
+  background: rgba(110, 31, 46, 0.18);
   border: 1.5px solid var(--ballet);
   color: var(--lace);
 }
 
 .btn-feedback.no:hover:not(:disabled) {
-  background: rgba(254, 145, 121, 0.35);
+  background: rgba(110, 31, 46, 0.35);
   box-shadow: var(--glow-ballet);
   transform: translateY(-2px);
 }
@@ -1914,7 +1915,7 @@ a {
 }
 
 .demo-tag {
-  background: rgba(254, 145, 121, 0.18);
+  background: rgba(110, 31, 46, 0.18);
   border: 1px solid var(--ballet);
   color: var(--lace);
   padding: 3px 10px;
@@ -2036,12 +2037,12 @@ a {
 }
 
 .signout-btn {
-  border-color: rgba(254, 145, 121, 0.4);
+  border-color: rgba(110, 31, 46, 0.4);
   color: var(--ballet);
 }
 
 .signout-btn:hover {
-  background: rgba(254, 145, 121, 0.15);
+  background: rgba(110, 31, 46, 0.15);
   border-color: var(--ballet);
 }
 
@@ -2051,7 +2052,7 @@ a {
 :root {
   --ivory: #FBF6EF;
   --sandal: #F1E3D3;
-  --kumkum: #E4A2A0;
+  --kumkum: #6E1F2E;
   --turmeric: #E8C77E;
   --indigo-thread: #7B87AE;
   --kolam-bronze: #8A5A3B;
@@ -2091,7 +2092,7 @@ a {
 body {
   background-color: var(--ivory);
   background-image:
-    radial-gradient(circle at 12% 8%, rgba(228, 162, 160, 0.28), transparent 28%),
+    radial-gradient(circle at 12% 8%, rgba(110, 31, 46, 0.18), transparent 28%),
     radial-gradient(circle at 88% 14%, rgba(232, 199, 126, 0.25), transparent 26%),
     radial-gradient(circle at 50% 100%, rgba(169, 194, 160, 0.22), transparent 34%),
     radial-gradient(rgba(123, 135, 174, 0.09) 1px, transparent 1px);
@@ -2109,7 +2110,7 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 .topbar h1 { color: var(--ink); background: none; -webkit-text-fill-color: initial; }
 .desktop-nav, .language-toggle { background: rgba(241, 227, 211, 0.72); border-color: rgba(123, 135, 174, 0.2); }
 .desktop-nav-link { color: var(--text-secondary); }
-.desktop-nav-link:hover, .desktop-nav-link.active { color: var(--ink); background: rgba(228, 162, 160, 0.24); border-color: var(--kumkum); box-shadow: none; }
+.desktop-nav-link:hover, .desktop-nav-link.active { color: var(--ink); background: rgba(110, 31, 46, 0.14); border-color: var(--kumkum); box-shadow: none; }
 .topbar-district-picker, .header-role-pill { background: rgba(255,255,255,.52); border-color: rgba(123,135,174,.25); color: var(--ink); }
 .topbar-district-picker select { color: var(--ink); }
 .topbar-district-picker select option { background: var(--ivory); color: var(--ink); }
@@ -2120,10 +2121,10 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 .btn-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--kumkum), #C98784);
+  background: linear-gradient(135deg, var(--kumkum), #8B3A4A);
   color: var(--ink);
   border: 1px solid rgba(255,255,255,.7);
-  box-shadow: 0 8px 20px rgba(201, 135, 132, .22);
+  box-shadow: 0 8px 20px rgba(110, 31, 46, .22);
 }
 .btn-primary::after {
   content: "";
@@ -2133,7 +2134,7 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
   border-radius: inherit;
   pointer-events: none;
 }
-.btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #E9AEAB, #C98784); box-shadow: 0 10px 26px rgba(201,135,132,.28); }
+.btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #8B3A4A, #551821); box-shadow: 0 10px 26px rgba(110,31,46,.28); }
 .btn-secondary, .btn-google { color: var(--ink); background: rgba(255,255,255,.45); border-color: rgba(123,135,174,.42); }
 .btn-secondary:hover:not(:disabled), .btn-google:hover:not(:disabled) { color: var(--ink); background: rgba(255,255,255,.72); border-color: var(--indigo-thread); }
 
@@ -2144,7 +2145,7 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 .landing-ambient-bg .blob { opacity: .45; filter: blur(24px); }
 .landing-top-bar { border-bottom-color: rgba(123,135,174,.15); }
 .landing-main-title { color: var(--ink); }
-.gradient-text, .hero-gradient-text { background: linear-gradient(135deg, #B76B69, var(--indigo-thread)); -webkit-background-clip: text; background-clip: text; }
+.gradient-text, .hero-gradient-text { background: linear-gradient(135deg, #6E1F2E, var(--indigo-thread)); -webkit-background-clip: text; background-clip: text; }
 .hero-glow-badge, .pill, .quick-chip, .chat-status-pill, .live-pill, .source-pill-badge, .role-pill-badge {
   color: var(--ink); background: rgba(241,227,211,.62); border-color: rgba(123,135,174,.28); box-shadow: none;
 }
@@ -2239,6 +2240,460 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
   .topbar-actions { gap: 6px; }
   .topbar-district-picker { max-width: 140px; }
   .desktop-nav { display: none; }
+}
+
+/* ========================================================================
+   METEOX PASTEL GLASS SYSTEM
+   ======================================================================== */
+:root {
+  --bg-gradient: linear-gradient(160deg, #FBF3E7 0%, #E3EEF2 100%);
+  --color-primary: #6E1F2E;
+  --color-data: #6FA8B5;
+  --color-advisory: #E3B463;
+  --color-text: #4A3225;
+  --color-success: #6B9080;
+  --color-text-toned: rgba(74, 50, 37, 0.22);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: 18px;
+  --bg-deep: #E3EEF2;
+  --bg-page: transparent;
+  --bg-card: var(--glass-bg);
+  --bg-card-hover: rgba(255, 255, 255, 0.72);
+  --bg-card-subtle: rgba(255, 255, 255, 0.42);
+  --bg-card-solid: rgba(255, 255, 255, 0.76);
+  --bg-active: var(--color-primary);
+  --bg-selected: rgba(110, 31, 46, 0.18);
+  --text-primary: var(--color-text);
+  --text-secondary: #6B5A50;
+  --text-muted: #83746B;
+  --text-dim: #A09289;
+  --accent-teal: var(--color-data);
+  --accent-teal-bright: var(--color-primary);
+  --sapphire: var(--color-data);
+  --arctic: #6B5A50;
+  --lace: var(--color-text);
+  --bubblegum: #F2C6B8;
+  --ballet: var(--color-primary);
+  --sage: var(--color-advisory);
+  --pistachio: #B9944C;
+  --spruce: #6B9080;
+  --peacock: var(--color-text);
+  --glass-shadow: 0 12px 30px rgba(74, 50, 37, 0.08);
+  --shadow-sm: 0 5px 16px rgba(74, 50, 37, 0.07);
+  --shadow-md: 0 12px 28px rgba(74, 50, 37, 0.09);
+  --shadow-lg: 0 18px 42px rgba(74, 50, 37, 0.11);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--color-text);
+  font-family: "Catamaran", "Noto Sans Tamil", sans-serif;
+}
+
+h1, h2, h3, h4, h5,
+button, input, select, textarea {
+  font-family: "Catamaran", "Noto Sans Tamil", sans-serif;
+}
+
+h1, h2, h3, h4, h5 {
+  letter-spacing: 0;
+  color: var(--color-text);
+}
+
+.topbar,
+.desktop-nav,
+.topbar-district-picker,
+.header-role-pill,
+.language-toggle,
+.dashboard-header-bar,
+.hero-weather-card-glass,
+.dashboard-section-card,
+.chat-component,
+.profile-card,
+.onboarding-screen,
+.location-select-box,
+.chat-welcome-card,
+.chat-composer,
+.trust-card,
+.feedback-container,
+.demo-mode-panel,
+.telemetry-panel-card,
+.station-card-glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+}
+
+.topbar {
+  background: rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(74, 50, 37, 0.1);
+}
+
+.topbar h1,
+.location-cluster-title h2,
+.profile-header h2,
+.chat-page-header h2 {
+  color: var(--color-text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.brand-live-sub .live-sub-text,
+.live-radar-tag,
+.status-live-dot,
+.section-label,
+.grounded-tag {
+  color: var(--color-data);
+}
+
+.status-live-dot,
+.live-dot-green {
+  background: var(--color-data);
+  box-shadow: 0 0 10px rgba(111, 168, 181, 0.45);
+}
+
+.desktop-nav,
+.language-toggle {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(74, 50, 37, 0.12);
+}
+
+.desktop-nav-link,
+.header-role-pill,
+.topbar-district-picker,
+.topbar-district-picker select,
+.lang-btn {
+  color: var(--color-text);
+}
+
+.desktop-nav-link.active,
+.header-role-pill,
+.role-pill-badge {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.desktop-nav-link:hover {
+  background: rgba(110, 31, 46, 0.14);
+  color: var(--color-text);
+}
+
+.topbar-district-picker {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(74, 50, 37, 0.14);
+}
+
+.topbar-district-picker select option,
+.district-field select option {
+  background: #FBF3E7;
+  color: var(--color-text);
+}
+
+.language-toggle {
+  padding: 4px;
+  min-height: 46px;
+}
+
+.lang-btn {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 15px;
+}
+
+.lang-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(110, 31, 46, 0.25);
+}
+
+.btn-primary,
+.send-btn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(110, 31, 46, 0.22);
+}
+
+.btn-secondary,
+.mic-btn {
+  background: rgba(255, 255, 255, 0.64);
+  border-color: rgba(74, 50, 37, 0.18);
+  color: var(--color-text);
+}
+
+.btn-primary:hover:not(:disabled),
+.send-btn:hover:not(:disabled) {
+  background: #551821;
+}
+
+/* Data treatment: weather facts, hourly readings, and outlook. */
+.hero-weather-card-glass,
+.dashboard-section-card,
+.metric-chip,
+.hourly-chip,
+.daily-forecast-row,
+.chat-facts-block {
+  background: rgba(255, 255, 255, 0.56);
+  border-color: rgba(111, 168, 181, 0.35);
+  border-top: 3px solid var(--color-data);
+}
+
+.hero-weather-card-glass::after {
+  background: radial-gradient(circle, rgba(111, 168, 181, 0.18) 0%, transparent 70%);
+}
+
+.hero-temp-large,
+.feels-value,
+.metric-chip .m-val,
+.hourly-temp,
+.daily-name,
+.daily-temp-bar .t-min,
+.daily-temp-bar .t-max,
+.section-card-header h4,
+.weather-title {
+  color: var(--color-text);
+}
+
+.metric-chip .m-label,
+.tele-label,
+.feels-label,
+.section-meta,
+.section-subtext,
+.hourly-time,
+.daily-condition {
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.hourly-forecast-row {
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.hourly-chip {
+  min-width: 92px;
+}
+
+/* Advisory treatment: gold only for role guidance and warning copy. */
+.advisory-card,
+.chat-advisory-block,
+.alert-card {
+  background: rgba(255, 249, 232, 0.66);
+  border-color: rgba(227, 180, 99, 0.58);
+  border-top: 3px solid var(--color-advisory);
+  box-shadow: 0 10px 24px rgba(227, 180, 99, 0.12);
+}
+
+.advisory-title,
+.advisory-text,
+.advisory-sentence,
+.alert-title,
+.alert-desc,
+.alert-card h4,
+.alert-card p {
+  color: var(--color-text);
+}
+
+.advisory-footnote,
+.alert-card-footer {
+  color: #967242;
+  border-top-color: rgba(227, 180, 99, 0.32);
+}
+
+/* System treatment: neutral surfaces for actions and settings. */
+.profile-card,
+.feedback-container,
+.trust-card,
+.demo-mode-panel,
+.location-select-box,
+.channel-item,
+.role-mini-chip,
+.role-option-card,
+.chat-composer,
+.chat-welcome-card,
+.chat-trust-pill {
+  background: rgba(255, 255, 255, 0.52);
+  border-color: var(--color-text-toned);
+}
+
+.profile-card,
+.feedback-container,
+.trust-card,
+.demo-mode-panel,
+.location-select-box {
+  border-top: 3px solid var(--color-text-toned);
+}
+
+.group-label,
+.feedback-question,
+.trust-title,
+.demo-title,
+.role-label,
+.profile-field-group,
+.channel-item,
+.role-option-card {
+  color: var(--color-text);
+}
+
+.role-mini-chip.selected,
+.role-option-card.selected {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(110, 31, 46, 0.2);
+}
+
+.role-option-card.selected .role-label,
+.role-option-card.selected .role-desc,
+.role-mini-chip.selected span {
+  color: #fff;
+}
+
+.chat-component {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.chat-feed {
+  background: transparent;
+}
+
+.chat-empty-state {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 12px;
+}
+
+.chat-empty-state .chat-welcome-card {
+  width: min(720px, 100%);
+  text-align: center;
+  border-top: 3px solid var(--color-advisory);
+}
+
+.chat-empty-state .chat-welcome-card > div:first-child {
+  justify-content: center;
+}
+
+.chat-example-prompts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-chip {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(110, 31, 46, 0.3);
+  color: var(--color-text);
+}
+
+.chat-composer {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.chat-composer input {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-text);
+  border-color: rgba(74, 50, 37, 0.18);
+}
+
+.bot-answer,
+.fact-item,
+.advisory-sentence {
+  color: var(--color-text);
+}
+
+.section-label,
+.group-label,
+.tele-label,
+.metric-chip .m-label,
+.live-radar-tag,
+.grounded-tag,
+.live-sub-text,
+.feels-label {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.kolam-loader {
+  width: 74px;
+  height: 44px;
+  overflow: visible;
+}
+
+.kolam-line {
+  fill: none;
+  stroke: var(--color-advisory);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: kolamDraw 2.4s ease-in-out infinite;
+}
+
+.kolam-line-two {
+  animation-delay: 0.45s;
+}
+
+.kolam-dot {
+  fill: var(--color-primary);
+  animation: kolamPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes kolamDraw {
+  0%, 12% { stroke-dashoffset: 120; opacity: 0.25; }
+  42%, 80% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -120; opacity: 0.2; }
+}
+
+@keyframes kolamPulse {
+  0%, 20%, 100% { opacity: 0.35; transform: scale(0.8); transform-origin: center; }
+  45%, 75% { opacity: 1; transform: scale(1); transform-origin: center; }
+}
+
+.feedback-container,
+.trust-card,
+.demo-mode-panel,
+.profile-card,
+.onboarding-screen {
+  color: var(--color-text);
+}
+
+.feedback-container .btn-feedback.yes {
+  background: rgba(107, 144, 128, 0.14);
+  border-color: var(--color-success);
+  color: var(--color-text);
+}
+
+.feedback-container .btn-feedback.no {
+  background: rgba(110, 31, 46, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .topbar-inner {
+    padding: 10px 14px;
+  }
+
+  .language-toggle {
+    min-height: 42px;
+  }
+
+  .lang-btn {
+    min-height: 32px;
+    padding-inline: 10px;
+  }
+
+  .chat-empty-state {
+    padding: 18px 4px;
+  }
 }
 
 /* Onboarding Screen */
@@ -2864,7 +3319,7 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-family: "Fraunces", "Noto Sans Tami
 
 .advisory-card {
   background: linear-gradient(135deg, #f1f2ef 0%, #e7e9e5 100%);
-  border-color: rgba(229, 109, 75, 0.34);
+  border-color: rgba(110, 31, 46, 0.34);
   box-shadow: 0 12px 30px rgba(40, 40, 38, 0.08);
 }
 
@@ -2924,7 +3379,7 @@ body {
 .source-pill-badge,
 .live-pill {
   background: #f4f4f2;
-  border-color: rgba(229, 109, 75, 0.26);
+  border-color: rgba(110, 31, 46, 0.26);
   color: var(--text-secondary);
 }
 
@@ -2935,7 +3390,7 @@ body {
 }
 
 .hero-weather-card-glass::after {
-  background: radial-gradient(circle, rgba(229, 109, 75, 0.16) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(110, 31, 46, 0.16) 0%, transparent 70%);
 }
 
 .hero-temp-large,
@@ -3038,7 +3493,7 @@ body {
 .hero-weather-card-glass,
 .advisory-card {
   background: linear-gradient(135deg, rgba(241, 227, 211, 0.82), rgba(255, 255, 255, 0.5));
-  border-color: rgba(228, 162, 160, 0.52);
+  border-color: rgba(110, 31, 46, 0.32);
   box-shadow: var(--glass-shadow);
 }
 
@@ -3588,6 +4043,302 @@ textarea {
   border-color: #cbd7d0;
 }
 
+/* Final theme cascade: keep the pastel glass system authoritative. */
+body {
+  background: var(--bg-gradient);
+  color: var(--color-text);
+  font-family: "Catamaran", "Noto Sans Tamil", sans-serif;
+}
+
+h1, h2, h3, h4, h5,
+button, input, select, textarea {
+  font-family: "Catamaran", "Noto Sans Tamil", sans-serif;
+}
+
+.topbar,
+.dashboard-header-bar,
+.hero-weather-card-glass,
+.dashboard-section-card,
+.profile-card,
+.chat-component,
+.chat-welcome-card,
+.chat-composer,
+.trust-card,
+.feedback-container,
+.demo-mode-panel,
+.telemetry-panel-card,
+.onboarding-screen,
+.location-select-box {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+}
+
+.topbar h1,
+.location-cluster-title h2,
+.profile-header h2,
+.chat-page-header h2,
+.hero-temp-large,
+.feels-value,
+.metric-chip .m-val,
+.hourly-temp,
+.section-card-header h4,
+.section-heading,
+.profile-card h2,
+.onboarding-screen h2,
+.onboarding-screen h3 {
+  color: var(--color-text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.desktop-nav,
+.language-toggle,
+.topbar-district-picker,
+.header-role-pill {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(74, 50, 37, 0.14);
+}
+
+.desktop-nav-link,
+.topbar-district-picker select,
+.header-role-pill,
+.lang-btn,
+.role-name {
+  color: var(--color-text);
+}
+
+.desktop-nav-link.active,
+.header-role-pill,
+.role-pill-badge,
+.lang-btn.active,
+.role-mini-chip.selected,
+.role-option-card.selected {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+
+.role-option-card.selected .role-label,
+.role-option-card.selected .role-desc,
+.role-mini-chip.selected span,
+.header-role-pill .role-name {
+  color: #fff;
+}
+
+.language-toggle {
+  min-height: 46px;
+  padding: 4px;
+}
+
+.lang-btn {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 15px;
+}
+
+.btn-primary,
+.send-btn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.btn-secondary,
+.mic-btn {
+  background: rgba(255, 255, 255, 0.66);
+  border-color: var(--color-text-toned);
+  color: var(--color-text);
+}
+
+.hero-weather-card-glass,
+.dashboard-section-card,
+.metric-chip,
+.hourly-chip,
+.daily-forecast-row,
+.chat-facts-block {
+  background: rgba(255, 255, 255, 0.56);
+  border-color: rgba(111, 168, 181, 0.36);
+  border-top: 3px solid var(--color-data);
+}
+
+.advisory-card,
+.chat-advisory-block,
+.alert-card {
+  background: rgba(255, 249, 232, 0.68);
+  border-color: rgba(227, 180, 99, 0.58);
+  border-top: 3px solid var(--color-advisory);
+  box-shadow: 0 10px 24px rgba(227, 180, 99, 0.12);
+}
+
+.advisory-title,
+.advisory-text,
+.advisory-sentence,
+.alert-title,
+.alert-desc,
+.alert-card h4,
+.alert-card p,
+.bot-answer,
+.fact-item {
+  color: var(--color-text);
+}
+
+.profile-card,
+.feedback-container,
+.trust-card,
+.demo-mode-panel,
+.location-select-box,
+.channel-item,
+.role-mini-chip,
+.role-option-card,
+.chat-trust-pill {
+  background: rgba(255, 255, 255, 0.52);
+  border-color: var(--color-text-toned);
+}
+
+.profile-card,
+.feedback-container,
+.trust-card,
+.demo-mode-panel,
+.location-select-box {
+  border-top: 3px solid var(--color-text-toned);
+}
+
+.group-label,
+.feedback-question,
+.trust-title,
+.demo-title,
+.role-label,
+.role-desc,
+.coords-display {
+  color: var(--color-text);
+}
+
+.live-radar-tag,
+.brand-live-sub .live-sub-text,
+.section-label,
+.grounded-tag,
+.status-live-dot,
+.live-dot-green {
+  color: var(--color-data);
+}
+
+.section-label,
+.group-label,
+.tele-label,
+.metric-chip .m-label,
+.live-radar-tag,
+.grounded-tag {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.chat-component {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.chat-feed {
+  background: transparent;
+}
+
+.chat-empty-state {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 12px;
+}
+
+.chat-empty-state .chat-welcome-card {
+  width: min(720px, 100%);
+  text-align: center;
+  border-top: 3px solid var(--color-advisory);
+}
+
+.chat-empty-state .chat-welcome-card > div:first-child {
+  justify-content: center;
+}
+
+.chat-example-prompts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quick-chip {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(110, 31, 46, 0.3);
+  color: var(--color-text);
+}
+
+.chat-composer {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.chat-composer input {
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--color-text);
+  border-color: var(--color-text-toned);
+}
+
+.hourly-forecast-row {
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.hourly-chip {
+  min-width: 92px;
+}
+
+.kolam-loader {
+  width: 74px;
+  height: 44px;
+  overflow: visible;
+}
+
+.kolam-line {
+  fill: none;
+  stroke: var(--color-advisory);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: kolamDraw 2.4s ease-in-out infinite;
+}
+
+.kolam-line-two { animation-delay: 0.45s; }
+
+.kolam-dot {
+  fill: var(--color-primary);
+  animation: kolamPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes kolamDraw {
+  0%, 12% { stroke-dashoffset: 120; opacity: 0.25; }
+  42%, 80% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -120; opacity: 0.2; }
+}
+
+@keyframes kolamPulse {
+  0%, 20%, 100% { opacity: 0.35; transform: scale(0.8); transform-origin: center; }
+  45%, 75% { opacity: 1; transform: scale(1); transform-origin: center; }
+}
+
+@media (max-width: 768px) {
+  .language-toggle { min-height: 42px; }
+  .lang-btn { min-height: 32px; padding-inline: 10px; }
+  .chat-empty-state { padding: 18px 4px; }
+}
+
+.live-sub-text,
+.feels-label {
+  text-transform: none !important;
+  letter-spacing: 0;
+}
+
 /* Home theme is intentionally last in the cascade. */
 .home-page-personalized { background: transparent; }
 .home-personalized-container { max-width: 1180px; gap: 16px; }
@@ -4115,13 +4866,13 @@ textarea {
 }
 
 .home-feedback-btn.no {
-  background: rgba(254, 145, 121, 0.14);
-  border-color: rgba(254, 145, 121, 0.45);
-  color: #FE9179;
+  background: rgba(110, 31, 46, 0.14);
+  border-color: rgba(110, 31, 46, 0.45);
+  color: #6E1F2E;
 }
 
 .home-feedback-btn.no:hover {
-  background: rgba(254, 145, 121, 0.25);
+  background: rgba(110, 31, 46, 0.25);
 }
 
 .home-feedback-thanks {
@@ -4247,8 +4998,8 @@ textarea {
 }
 
 .mic-btn.listening {
-  background: rgba(254, 145, 121, 0.25);
-  border: 1px solid #FE9179;
+  background: rgba(110, 31, 46, 0.22);
+  border: 1px solid #6E1F2E;
   animation: pulseDot 1.5s infinite;
 }
 
@@ -4369,7 +5120,7 @@ textarea {
 
 .landing-ambient-bg {
   background:
-    radial-gradient(circle at 78% 18%, rgba(229, 109, 75, 0.12), transparent 28%),
+    radial-gradient(circle at 78% 18%, rgba(110, 31, 46, 0.12), transparent 28%),
     linear-gradient(135deg, #ffffff 0%, #f3f3f1 72%);
 }
 
@@ -4379,7 +5130,7 @@ textarea {
 }
 
 .blob-1 { background: #d5d5d1; }
-.blob-2 { background: #e56d4b; opacity: 0.12; }
+.blob-2 { background: #6e1f2e; opacity: 0.12; }
 .blob-3 { background: #bdbdb8; opacity: 0.10; }
 
 .landing-top-bar,
@@ -4432,7 +5183,7 @@ textarea {
 
 .landing-card-glass.highlight-green {
   background: #eeeeec;
-  border-color: rgba(229, 109, 75, 0.30);
+  border-color: rgba(110, 31, 46, 0.30);
 }
 
 .card-tag,
@@ -4462,7 +5213,7 @@ textarea {
 }
 
 .micro-bar-fill {
-  background: linear-gradient(90deg, #e56d4b, #f0a087);
+  background: linear-gradient(90deg, #6e1f2e, #9b5364);
 }
 
 .topbar h1 {
@@ -4654,7 +5405,7 @@ textarea {
 .chat-status-pill {
   color: var(--accent-teal);
   background: #fff4ef;
-  border-color: rgba(229, 109, 75, 0.32);
+  border-color: rgba(110, 31, 46, 0.32);
 }
 
 .chat-component {
@@ -4672,7 +5423,7 @@ textarea {
 
 .quick-chip {
   background: #ffffff;
-  border-color: rgba(229, 109, 75, 0.25);
+  border-color: rgba(110, 31, 46, 0.25);
   color: var(--text-secondary);
 }
 
@@ -4721,7 +5472,7 @@ textarea {
 
 .chat-advisory-block {
   background: #fff4ef;
-  border-color: rgba(229, 109, 75, 0.32);
+  border-color: rgba(110, 31, 46, 0.32);
 }
 
 .chat-trust-pill {

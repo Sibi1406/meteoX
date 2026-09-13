@@ -6,15 +6,19 @@ const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("weathergpt_lang") || "en";
+    if (typeof window === "undefined") return "en";
+    return window.localStorage.getItem("weathergpt_lang") || "en";
   });
 
   useEffect(() => {
-    localStorage.setItem("weathergpt_lang", language);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("weathergpt_lang", language);
+    }
   }, [language]);
 
   const t = (key) => {
-    return translations[language]?.[key] || translations.en[key] || key;
+    const normalizedKey = key === "city_admin" ? "cityAdmin" : key;
+    return translations[language]?.[normalizedKey] || translations.en[normalizedKey] || translations[language]?.[key] || translations.en[key] || key;
   };
 
   return (

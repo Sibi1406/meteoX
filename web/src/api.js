@@ -36,13 +36,25 @@ async function ensureSignedIn() {
   if (auth.currentUser) return;
   if (!signInPromise) signInPromise = signInAnonymously(auth);
   try {
-    await signInPromise;
+    await Promise.race([
+      signInPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Firebase sign-in timed out")), 6000)),
+    ]);
   } finally {
     signInPromise = undefined;
   }
   if (!auth.currentUser) {
     throw new Error("unauthenticated: Firebase sign-in did not produce a user");
   }
+}
+
+function withTimeout(promiseFactory, timeoutMs = 8000, fallbackMessage = "request timed out") {
+  return Promise.race([
+    promiseFactory(),
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(fallbackMessage)), timeoutMs);
+    }),
+  ]);
 }
 
 function callableError(name, error) {
@@ -117,7 +129,11 @@ export const api = {
   async handleQuery(data) {
     try {
       await ensureSignedIn();
-      const result = await httpsCallable(functions, "handleQuery")(data);
+      const result = await withTimeout(
+        () => httpsCallable(functions, "handleQuery")(data),
+        10000,
+        "handleQuery timed out"
+      );
       return result.data;
     } catch (error) {
       throw callableError("handleQuery", error);
@@ -127,7 +143,11 @@ export const api = {
   async getWeatherDashboard(data) {
     try {
       await ensureSignedIn();
-      const result = await httpsCallable(functions, "getWeatherDashboard")(data);
+      const result = await withTimeout(
+        () => httpsCallable(functions, "getWeatherDashboard")(data),
+        10000,
+        "getWeatherDashboard timed out"
+      );
       return result.data;
     } catch (error) {
       console.warn("Firebase dashboard unavailable; using public weather fallback.", error);
@@ -145,7 +165,11 @@ export const api = {
   async submitFeedback(data) {
     try {
       await ensureSignedIn();
-      const result = await httpsCallable(functions, "submitFeedback")(data);
+      const result = await withTimeout(
+        () => httpsCallable(functions, "submitFeedback")(data),
+        10000,
+        "submitFeedback timed out"
+      );
       return result.data;
     } catch (error) {
       throw callableError("submitFeedback", error);
@@ -155,7 +179,11 @@ export const api = {
   async createUserProfile(data) {
     try {
       await ensureSignedIn();
-      const result = await httpsCallable(functions, "createUserProfile")(data);
+      const result = await withTimeout(
+        () => httpsCallable(functions, "createUserProfile")(data),
+        10000,
+        "createUserProfile timed out"
+      );
       return result.data;
     } catch (error) {
       throw callableError("createUserProfile", error);
@@ -165,7 +193,11 @@ export const api = {
   async triggerDemoAlert(data) {
     try {
       await ensureSignedIn();
-      const result = await httpsCallable(functions, "triggerDemoAlert")(data);
+      const result = await withTimeout(
+        () => httpsCallable(functions, "triggerDemoAlert")(data),
+        10000,
+        "triggerDemoAlert timed out"
+      );
       return result.data;
     } catch (error) {
       throw callableError("triggerDemoAlert", error);

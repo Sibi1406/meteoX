@@ -72,13 +72,11 @@ export default function Home({ profile }) {
   const cluster = data?.cluster || clusterData || { displayName: district };
   const alerts = [...(data?.alerts || []), ...(simulatedAlert ? [simulatedAlert] : [])];
   const currentDate = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, "0")}-${String(currentTime.getDate()).padStart(2, "0")}`;
-  const currentHour = currentTime.getHours();
   const hourlyToday = (weather?.hourly || []).filter((hour) => {
     const match = typeof hour.time === "string" && hour.time.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})/);
     if (!match) return false;
     const hourDate = match[1];
-    const hourValue = Number(match[2]);
-    return hourDate === currentDate && hourValue >= currentHour && hourValue <= 23;
+    return hourDate === currentDate;
   });
   const dailyForecast = weather?.daily || weather?.dailyForecast || [];
   const currentCondition = interpretWeatherCode(weather?.weatherCode ?? 0, isTamil);
@@ -88,13 +86,20 @@ export default function Home({ profile }) {
     return Number.isNaN(date.getTime()) ? value : date.toLocaleTimeString([], { hour: "numeric" });
   }
 
+  function updatedLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? t("updatedAgo")
+      : `${t("updatedAt")} ${date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }
+
   return (
     <div className="page dashboard-page-wide home-intelligence-page">
       <div className="dashboard-header-bar">
         <div className="location-cluster-title">
           <span className="live-radar-tag"><span className="live-dot-green"></span> {t("liveWeatherData")}</span>
           <h2>{cluster.displayName || district}</h2>
-          <span className="coords-sub">{lat.toFixed(2)}°N, {lng.toFixed(2)}°E • {weather?.timestamp || t("updatedAgo")}</span>
+          <span className="coords-sub">{lat.toFixed(2)}°N, {lng.toFixed(2)}°E • {updatedLabel(weather?.timestamp)}</span>
         </div>
         <div className="header-badges">
           <span className="role-pill-badge" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><RoleIcon role={role} size={16} /><span>{t(role)}</span></span>

@@ -83,6 +83,7 @@ export const translations = {
     reportsCount: "reports",
     quickPromptsLabel: "Quick Prompts for Ask AI",
     updatedAgo: "Updated just now",
+    updatedAt: "Updated",
 
     // Dashboard
     dashboardTitle: "Weather & Advisory Dashboard",
@@ -92,10 +93,10 @@ export const translations = {
     weeklyOutlook: "7-Day Outlook",
     temperature: "Temperature",
     feelsLike: "Feels Like",
-    rainProbability: "Rain Probability",
+    rainProbability: "Rain probability",
     rainfall: "Precipitation",
     humidity: "Humidity",
-    windSpeed: "Wind Speed",
+    windSpeed: "Wind speed",
     pressure: "Pressure",
     uvIndex: "UV Index",
     source: "Source",
@@ -186,7 +187,7 @@ export const translations = {
     alertsTitle: "Severe Weather Alerts",
     noAlerts: "No extreme weather alerts in your cluster today.",
     simulatedDemoAlert: "Trigger Simulated Alert (Demo Mode)",
-    autoWeatherAlert: "AUTOMATED WEATHER THRESHOLD ALERT",
+    autoWeatherAlert: "Automated weather alert",
     disasterManagementNote: "Follow local district disaster management & official IMD bulletins",
 
     // Profile
@@ -196,8 +197,8 @@ export const translations = {
     profileUpdated: "Profile updated successfully!",
     guestMode: "Guest session",
     guestSession: "Guest session",
-    adapterReady: "Not yet connected",
-    notConnected: "Not yet connected",
+    adapterReady: "Not connected",
+    notConnected: "Not connected",
 
     // Demo Mode
     demoMode: "Hackathon Demo Mode",
@@ -285,7 +286,8 @@ export const translations = {
     forecastConfidence: "உள்ளூர் முன்னறிவிப்பு நம்பிக்கை",
     reportsCount: "பதிவுகள்",
     quickPromptsLabel: "விரைவு AI கேள்விகள்",
-    updatedAgo: "சற்று முன் புதுப்பிக்கப்பட்டது",
+    updatedAgo: "இப்போது புதுப்பிக்கப்பட்டது",
+    updatedAt: "புதுப்பிக்கப்பட்டது",
 
     // Dashboard
     dashboardTitle: "வானிலை மற்றும் ஆலோசனை டாஷ்போர்டு",

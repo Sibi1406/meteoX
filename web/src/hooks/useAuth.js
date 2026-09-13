@@ -8,10 +8,34 @@ export function useAuth() {
   const [authError, setAuthError] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribe;
+    let isMounted = true;
+    const fallbackTimer = window.setTimeout(() => {
+      if (isMounted) {
+        setUser(null);
+      }
+    }, 2000);
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        if (!isMounted) return;
+        setUser(currentUser ?? null);
+        window.clearTimeout(fallbackTimer);
+      },
+      (error) => {
+        console.warn("Firebase auth initialization failed; falling back to guest mode.", error);
+        if (isMounted) {
+          setUser(null);
+        }
+        window.clearTimeout(fallbackTimer);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(fallbackTimer);
+      unsubscribe();
+    };
   }, []);
 
   async function loginWithGoogle() {

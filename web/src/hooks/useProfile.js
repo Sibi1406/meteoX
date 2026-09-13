@@ -13,12 +13,12 @@ export const DEFAULT_LOCATION = {
 
 export function useProfile(user) {
   const [profile, setProfile] = useState(() => {
+    if (typeof window === "undefined") return null;
     try {
-      const saved = localStorage.getItem("weathergpt_profile");
+      const saved = window.localStorage.getItem("weathergpt_profile");
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Clear old stale hardcoded Coimbatore default if present from previous runs
-        if (parsed?.location?.district === "Coimbatore" && !localStorage.getItem("weathergpt_explicit_coimbatore")) {
+        if (parsed?.location?.district === "Coimbatore" && !window.localStorage.getItem("weathergpt_explicit_coimbatore")) {
           parsed.location = DEFAULT_LOCATION;
         }
         return parsed;

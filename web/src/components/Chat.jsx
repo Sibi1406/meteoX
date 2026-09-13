@@ -192,7 +192,8 @@ export default function Chat({ profile }) {
       <div className="chat-feed" ref={logRef}>
         {isInitialState ? (
           /* Reduced empty space on initial state (Spec Item 6) */
-          <div className="chat-welcome-card">
+          <div className="chat-empty-state">
+            <div className="chat-welcome-card">
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <RoleIcon role={role} size={28} />
               <h3 style={{ margin: 0, fontSize: "18px" }}>
@@ -207,13 +208,12 @@ export default function Chat({ profile }) {
                   fontSize: "12px",
                   fontWeight: "700",
                   color: "var(--text-muted)",
-                  textTransform: "uppercase",
                   marginBottom: "10px",
                 }}
               >
                 {t("quickPromptsLabel")}
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="chat-example-prompts">
                 {quickPrompts.map((p, idx) => (
                   <button
                     key={idx}
@@ -225,6 +225,7 @@ export default function Chat({ profile }) {
                   </button>
                 ))}
               </div>
+            </div>
             </div>
           </div>
         ) : (
@@ -245,7 +246,17 @@ export default function Chat({ profile }) {
         {busy && (
           <div className="chat-row bot">
             <div className="bubble bot thinking-bubble">
-              <span className="dot-pulse"></span> {t("thinking")}
+              <svg className="kolam-loader" viewBox="0 0 80 48" role="img" aria-label={t("thinking")}>
+                <path className="kolam-line kolam-line-one" d="M12 24c0-8 8-12 16-12s16 4 16 12-8 12-16 12-16-4-16-12Zm24 0c0-8 8-12 16-12s16 4 16 12-8 12-16 12-16-4-16-12Z" />
+                <path className="kolam-line kolam-line-two" d="M28 12c8 0 12 8 12 16s-4 16-12 16-12-8-12-16 4-16 12-16Zm24 0c8 0 12 8 12 16s-4 16-12 16-12-8-12-16 4-16 12-16Z" />
+                <circle className="kolam-dot" cx="12" cy="24" r="3" />
+                <circle className="kolam-dot" cx="28" cy="12" r="3" />
+                <circle className="kolam-dot" cx="44" cy="24" r="3" />
+                <circle className="kolam-dot" cx="60" cy="12" r="3" />
+                <circle className="kolam-dot" cx="28" cy="36" r="3" />
+                <circle className="kolam-dot" cx="52" cy="36" r="3" />
+              </svg>
+              <span>{t("thinking")}</span>
             </div>
           </div>
         )}
