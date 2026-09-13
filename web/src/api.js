@@ -126,6 +126,7 @@ export const api = {
 
   async getWeatherDashboard(data) {
     try {
+      await ensureSignedIn();
       const result = await httpsCallable(functions, "getWeatherDashboard")(data);
       return result.data;
     } catch (error) {
