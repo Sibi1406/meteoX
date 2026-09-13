@@ -37,10 +37,15 @@ export default function Home({ profile }) {
       }
     }
     loadWeather();
-    const refreshTimer = window.setInterval(loadWeather, 15 * 60 * 1000);
+    const refreshTimer = window.setInterval(loadWeather, 60 * 1000);
+    const refreshOnFocus = () => loadWeather();
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
     return () => {
       isMounted = false;
       window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
     };
   }, [lat, lng, role, language, district, clusterData]);
 
