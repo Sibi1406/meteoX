@@ -181,7 +181,7 @@ exports.handleQuery = onCall(
 // ---------------------------------------------------------------------------
 // 2. getWeatherDashboard — Pre-fetches comprehensive dashboard state
 // ---------------------------------------------------------------------------
-exports.getWeatherDashboard = onCall({ invoker: "public" }, async (request) => {
+exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) => {
   const { lat, lng, role, languageCode } = request.data || {};
   if (lat == null || lng == null) {
     throw new HttpsError("invalid-argument", "Latitude and Longitude required");
