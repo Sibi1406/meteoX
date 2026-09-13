@@ -23,7 +23,7 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
   const advisoryList = advisoryData.advisory || [];
   const localTrust = advisoryData.localTrust || message.localTrust;
   const answer = advisoryData.answer || message.text;
-  const speechText = [answer, ...weatherFacts, ...advisoryList]
+  const speechText = [answer, ...advisoryList]
     .filter(Boolean)
     .join(". ");
 
