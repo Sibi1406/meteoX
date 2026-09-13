@@ -185,7 +185,7 @@ exports.handleQuery = onCall(
 // 2. getWeatherDashboard — Pre-fetches comprehensive dashboard state
 // ---------------------------------------------------------------------------
 exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) => {
-  const { lat, lng, role, languageCode } = request.data || {};
+  const { lat, lng, role, languageCode, district, cluster: requestedCluster } = request.data || {};
   if (lat == null || lng == null) {
     throw new HttpsError("invalid-argument", "Latitude and Longitude required");
   }
@@ -195,7 +195,10 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
 
   try {
     const weather = await getWeather(lat, lng, lang);
-    const cluster = weather.location?.cluster || resolveCluster(lat, lng);
+    const cluster = requestedCluster?.displayName
+      ? requestedCluster
+      : weather.location?.cluster || resolveCluster(lat, lng, district);
+    weather.location = { ...weather.location, cluster };
 
     // Retrieve trust score for this cluster
     const trustDoc = await db.collection("trust_scores").doc(cluster.clusterId).get();
