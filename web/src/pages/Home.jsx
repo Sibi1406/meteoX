@@ -37,7 +37,11 @@ export default function Home({ profile }) {
       }
     }
     loadWeather();
-    return () => { isMounted = false; };
+    const refreshTimer = window.setInterval(loadWeather, 15 * 60 * 1000);
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshTimer);
+    };
   }, [lat, lng, role, language, district, clusterData]);
 
   useEffect(() => {
