@@ -1,6 +1,5 @@
 // components/ChatMessage.jsx — Rich message renderer with weather facts, advisory card, and trust score
 import { useLanguage } from "../i18n/LanguageContext";
-import Feedback from "./Feedback";
 import RoleIcon from "./RoleIcon";
 
 export default function ChatMessage({ message, profile, onSpeak, speaking, onFeedbackCalibrated }) {
@@ -98,18 +97,6 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
           <span className="grounded-source">{t("liveWeatherData")} • {t("zeroHallucination")}</span>
         </div>
 
-        {/* 4. One-Tap Verification Feedback */}
-        {message.queryId && (
-          <div className="chat-feedback-wrapper">
-            <Feedback
-              forecastId={message.forecastId || message.queryId}
-              lat={profile?.location?.latitude}
-              lng={profile?.location?.longitude}
-              role={profile?.role}
-              onCalibrated={onFeedbackCalibrated}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

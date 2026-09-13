@@ -42,7 +42,7 @@ Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences
       ? `{ "trustScore": "${Math.round((context.localTrust.trustScore || 0.8) * 100)}%", "sampleCount": ${context.localTrust.sampleCount || 0}, "note": "${isTamil ? 'உள்ளூர் நம்பகத்தன்மை' : 'Local reliability'}" }`
       : `null`
   },
-  "answer": "A very simple answer in ${isTamil ? 'Tamil' : 'English'} for an ordinary person. Use only 1 or 2 short sentences, maximum 25 words. Answer the user's question directly, use everyday words, and do not repeat the weather facts or advisory section."
+  "answer": "A warm, friendly, very simple answer in ${isTamil ? 'Tamil' : 'English'} for an ordinary person. Sound like a helpful local advisor, not a formal report. Use only 1 or 2 short sentences, maximum 25 words. Answer the user's question directly with everyday words, and do not repeat the weather facts or advisory section."
 }
 `.trim();
 }
