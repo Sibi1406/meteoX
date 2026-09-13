@@ -23,6 +23,9 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
   const advisoryList = advisoryData.advisory || [];
   const localTrust = advisoryData.localTrust || message.localTrust;
   const answer = advisoryData.answer || message.text;
+  const speechText = [answer, ...weatherFacts, ...advisoryList]
+    .filter(Boolean)
+    .join(". ");
 
   return (
     <div className="chat-row bot">
@@ -35,7 +38,7 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
               <button
                 type="button"
                 className="speak-btn"
-                onClick={() => onSpeak(answer)}
+                onClick={() => onSpeak(speechText)}
                 title={speaking ? t("stopSpeaking") : t("speakAnswer")}
                 aria-label={speaking ? t("stopSpeaking") : t("speakAnswer")}
               >
