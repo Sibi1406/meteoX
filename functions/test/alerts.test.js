@@ -5,18 +5,28 @@ const { detectSevereWeather } = require("../lib/alerts/detection");
 const { filterAlertsForUser } = require("../lib/alerts/vulnerability");
 const { buildPersonalizedAlert } = require("../lib/alerts/personalization");
 
-describe("Extreme Weather Alert System", () => {
-  it("detects heavy rainfall when rainProbability >= 80%", () => {
+describe("Official Weather Alert System", () => {
+  it("does not alert from forecast thresholds alone", () => {
     const weather = {
       rainfallMm: 22,
-      rainProbability: 85,
+      rainProbability: 100,
       windSpeedKmh: 15,
       temperatureC: 28,
     };
 
     const alerts = detectSevereWeather(weather);
-    assert.ok(alerts.length > 0);
-    assert.strictEqual(alerts[0].type, "heavy_rain");
+    assert.deepStrictEqual(alerts, []);
+  });
+
+  it("returns only official warnings", () => {
+    const officialWarning = { type: "heavy_rain", isOfficialWarning: true };
+    const alerts = detectSevereWeather({
+      rainfallMm: 4,
+      rainProbability: 100,
+      officialWarnings: [officialWarning, { type: "high_wind", isOfficialWarning: false }],
+    });
+
+    assert.deepStrictEqual(alerts, [officialWarning]);
   });
 
   it("filters alerts based on role vulnerability", () => {
