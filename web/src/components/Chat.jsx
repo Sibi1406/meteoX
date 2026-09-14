@@ -13,6 +13,7 @@ export default function Chat({ profile }) {
 
   const [messages, setMessages] = useState([
     {
+      id: "welcome-message",
       sender: "bot",
       text: t("chatWelcome"),
       isWelcome: true,
@@ -48,6 +49,13 @@ export default function Chat({ profile }) {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
   // Retrieve role-aware question chips (Spec Item 6)
   const rawRolePrompts = t("rolePrompts");
   const quickPrompts =
@@ -62,7 +70,14 @@ export default function Chat({ profile }) {
     if (!query || busy) return;
 
     setInput("");
-    setMessages((prev) => [...prev, { sender: "user", text: query }]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `user-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        sender: "user",
+        text: query,
+      },
+    ]);
     setBusy(true);
 
     try {
@@ -84,6 +99,7 @@ export default function Chat({ profile }) {
       setMessages((prev) => [
         ...prev,
         {
+          id: `bot-${Date.now()}-${Math.random().toString(16).slice(2)}`,
           sender: "bot",
           queryId: data.queryId,
           forecastId: data.forecastId,
@@ -97,6 +113,7 @@ export default function Chat({ profile }) {
       setMessages((prev) => [
         ...prev,
         {
+          id: `bot-error-${Date.now()}-${Math.random().toString(16).slice(2)}`,
           sender: "bot",
           text: t("chatError"),
         },
@@ -122,9 +139,10 @@ export default function Chat({ profile }) {
 
     if (listening) {
       recognitionRef.current?.stop();
-      setListening(false);
       return;
     }
+
+    if (busy) return;
 
     try {
       const rec = new SpeechRecognition();
@@ -133,10 +151,10 @@ export default function Chat({ profile }) {
       rec.interimResults = false;
 
       rec.onstart = () => setListening(true);
-      rec.onend = () => setListening(false);
       rec.onerror = (e) => {
         console.warn("Speech recognition error:", e);
         setListening(false);
+        recognitionRef.current = null;
       };
       rec.onresult = (event) => {
         const transcript = event.results[0]?.[0]?.transcript;
@@ -145,12 +163,17 @@ export default function Chat({ profile }) {
           handleSend(transcript);
         }
       };
+      rec.onend = () => {
+        setListening(false);
+        recognitionRef.current = null;
+      };
 
       recognitionRef.current = rec;
       rec.start();
     } catch (e) {
       console.warn("Could not start speech recognition:", e);
       setListening(false);
+      recognitionRef.current = null;
     }
   }
 
@@ -228,9 +251,9 @@ export default function Chat({ profile }) {
             </div>
           </div>
         ) : (
-          messages.map((m, idx) => (
+          messages.map((m) => (
             <ChatMessage
-              key={idx}
+              key={m.id || `message-${m.sender}-${m.text}`}
               message={m}
               profile={profile}
               onSpeak={handleSpeak}
@@ -245,15 +268,10 @@ export default function Chat({ profile }) {
         {busy && (
           <div className="chat-row bot">
             <div className="bubble bot thinking-bubble">
-              <svg className="kolam-loader" viewBox="0 0 80 48" role="img" aria-label={t("thinking")}>
-                <path className="kolam-line kolam-line-one" d="M12 24c0-8 8-12 16-12s16 4 16 12-8 12-16 12-16-4-16-12Zm24 0c0-8 8-12 16-12s16 4 16 12-8 12-16 12-16-4-16-12Z" />
-                <path className="kolam-line kolam-line-two" d="M28 12c8 0 12 8 12 16s-4 16-12 16-12-8-12-16 4-16 12-16Zm24 0c8 0 12 8 12 16s-4 16-12 16-12-8-12-16 4-16 12-16Z" />
-                <circle className="kolam-dot" cx="12" cy="24" r="3" />
-                <circle className="kolam-dot" cx="28" cy="12" r="3" />
-                <circle className="kolam-dot" cx="44" cy="24" r="3" />
-                <circle className="kolam-dot" cx="60" cy="12" r="3" />
-                <circle className="kolam-dot" cx="28" cy="36" r="3" />
-                <circle className="kolam-dot" cx="52" cy="36" r="3" />
+              <svg className="kolam-loader" viewBox="0 0 60 20" role="img" aria-label={t("thinking")}>
+                <circle className="kolam-loader-dot dot-one" cx="10" cy="10" r="3.5" />
+                <circle className="kolam-loader-dot dot-two" cx="30" cy="10" r="3.5" />
+                <circle className="kolam-loader-dot dot-three" cx="50" cy="10" r="3.5" />
               </svg>
               <span>{t("thinking")}</span>
             </div>
@@ -264,10 +282,12 @@ export default function Chat({ profile }) {
       {/* Message Composer */}
       <div className="chat-composer">
         <button
+          type="button"
           className={`mic-btn ${listening ? "listening" : ""}`}
           title={listening ? "Listening..." : t("micPlaceholder")}
           onClick={handleToggleVoice}
           aria-label="Voice input"
+          disabled={busy}
         >
           {listening ? "🔴" : "🎙️"}
         </button>
@@ -278,7 +298,7 @@ export default function Chat({ profile }) {
           placeholder={t("chatPlaceholder")}
           disabled={busy}
         />
-        <button className="send-btn" onClick={() => handleSend()} disabled={busy || !input.trim()}>
+        <button type="button" className="send-btn" onClick={() => handleSend()} disabled={busy || !input.trim()}>
           {t("send")}
         </button>
       </div>

@@ -50,10 +50,44 @@ Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences
 /**
  * Generates an advisory via Gemini with grounding verification and regeneration loop.
  */
+function buildDeterministicFallbackAnswer({ query, context, deterministicAdvisory, targetForecast, isTamil }) {
+  const lowerQuery = String(query || "").toLowerCase();
+  const rainChance = targetForecast?.rainProbability ?? context.weather?.rainProbability ?? 0;
+  const temp = targetForecast?.temperatureMaxC ?? context.weather?.temperatureC ?? 30;
+  const wind = targetForecast?.windSpeedKmh ?? context.weather?.windSpeedKmh ?? 12;
+
+  if (lowerQuery.includes("rain") || lowerQuery.includes("மழை") || lowerQuery.includes("umbrella")) {
+    return isTamil
+      ? `மழை வாய்ப்பு ${rainChance}% ஆக உள்ளது. ${deterministicAdvisory}`
+      : `There is about a ${rainChance}% chance of rain. ${deterministicAdvisory}`;
+  }
+
+  if (lowerQuery.includes("fertilizer") || lowerQuery.includes("உரம்") || lowerQuery.includes("spray") || lowerQuery.includes("pesticide")) {
+    return isTamil
+      ? `இன்றைய வானிலை அடிப்படையில், உரம்/சிகிச்சையை ${rainChance >= 60 ? 'இன்னும் ஒத்திவைக்க' : 'சில மணி நேரத்திற்குள்'} செய்யலாம். ${deterministicAdvisory}`
+      : `Based on the current forecast, it is ${rainChance >= 60 ? 'safer to delay' : 'reasonable to proceed soon'} with fertilizer or spray work. ${deterministicAdvisory}`;
+  }
+
+  if (lowerQuery.includes("temperature") || lowerQuery.includes("hot") || lowerQuery.includes("cold") || lowerQuery.includes("வெப்ப") || lowerQuery.includes("குளிர்")) {
+    return isTamil
+      ? `வெப்பநிலை சுமார் ${temp}°C ஆக இருக்கும். ${deterministicAdvisory}`
+      : `The temperature is around ${temp}°C. ${deterministicAdvisory}`;
+  }
+
+  if (lowerQuery.includes("wind") || lowerQuery.includes("காற்று")) {
+    return isTamil
+      ? `காற்று சுமார் ${wind} km/h வேகத்தில் வீசும். ${deterministicAdvisory}`
+      : `Winds are expected at around ${wind} km/h. ${deterministicAdvisory}`;
+  }
+
+  return isTamil
+    ? `சமீபத்திய வானிலைத் தரவின் அடிப்படையில் ${deterministicAdvisory}`
+    : `Based on the latest weather data, ${deterministicAdvisory}`;
+}
+
 async function generateAdvisoryWithGrounding({ query, context }) {
   let attempts = 0;
   let lastFailureReason = null;
-  let lastAdvisory = null;
 
   while (attempts <= MAX_REGENERATIONS) {
     attempts++;
@@ -63,11 +97,9 @@ async function generateAdvisoryWithGrounding({ query, context }) {
       const prompt = buildPrompt(query, context, lastFailureReason);
       const rawText = (await generateAdvisoryText(prompt)).trim();
 
-      // Clean markdown code fences if model accidentally wrapped in ```json
       const cleanedJson = rawText.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
       const parsed = JSON.parse(cleanedJson);
 
-      // Verify Grounding
       const check = verifyGrounding(parsed, context);
       if (check.passed) {
         return {
@@ -77,9 +109,7 @@ async function generateAdvisoryWithGrounding({ query, context }) {
         };
       }
 
-      // Grounding failed -> log and regenerate
       lastFailureReason = check.failures.join("; ");
-      lastAdvisory = parsed;
       warn(`Grounding failed on attempt ${attempts}`, { failures: check.failures });
     } catch (err) {
       error(`Error generating or parsing Gemini advisory on attempt ${attempts}`, err);
@@ -87,7 +117,6 @@ async function generateAdvisoryWithGrounding({ query, context }) {
     }
   }
 
-  // If still failing after MAX_REGENERATIONS, provide deterministic rule-based fallback
   warn("Grounding verification exceeded maximum retries. Using safe deterministic fallback.");
   const isTamil = context.language === "ta";
   const deterministicAdvisory = evaluateRoleAdvisory(context.role, context.weather, context.language);
@@ -96,8 +125,8 @@ async function generateAdvisoryWithGrounding({ query, context }) {
   return {
     weatherFacts: [
       isTamil
-        ? `மழை வாய்ப்பு: ${targetForecast.rainProbability || 0}%`
-        : `Rain probability: ${targetForecast.rainProbability || 0}%`,
+        ? `மழை வாய்ப்பு: ${targetForecast.rainProbability || context.weather?.rainProbability || 0}%`
+        : `Rain probability: ${targetForecast.rainProbability || context.weather?.rainProbability || 0}%`,
       isTamil
         ? `வெப்பநிலை: ${targetForecast.temperatureMaxC || context.weather?.temperatureC || 30}°C`
         : `Temperature: ${targetForecast.temperatureMaxC || context.weather?.temperatureC || 30}°C`,
@@ -112,9 +141,13 @@ async function generateAdvisoryWithGrounding({ query, context }) {
           sampleCount: context.localTrust.sampleCount,
         }
       : null,
-    answer: isTamil
-      ? "உங்கள் கேள்விக்கான பதிலை கீழே உள்ள வானிலை தகவல்களில் பார்க்கலாம்."
-      : "Here is the simple answer based on the latest weather information.",
+    answer: buildDeterministicFallbackAnswer({
+      query,
+      context,
+      deterministicAdvisory,
+      targetForecast,
+      isTamil,
+    }),
     confidence: "medium",
     isFallback: true,
   };
