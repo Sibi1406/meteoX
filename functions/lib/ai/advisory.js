@@ -1,5 +1,5 @@
 // ai/advisory.js — Grounded Advisory Generator with Auto-Regeneration (Spec §20, §21, §22)
-const { getGeminiModel, GEMINI_SYSTEM_PROMPT } = require("./gemini");
+const { generateAdvisoryText, GEMINI_SYSTEM_PROMPT } = require("./gemini");
 const { verifyGrounding } = require("./grounding");
 const { MAX_REGENERATIONS } = require("../config");
 const { evaluateRoleAdvisory } = require("../advisory/roleRules");
@@ -30,12 +30,12 @@ ${
 Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences, no extra text):
 {
   "weatherFacts": [
-    "Fact 1 (e.g. ${isTamil ? 'நாளை மழை வாய்ப்பு: 80%' : 'Rain probability for tomorrow: 80%'})",
-    "Fact 2 (e.g. ${isTamil ? 'எதிர்பார்க்கப்படும் வெப்பநிலை: 29°C' : 'Expected temperature: 29°C'})",
-    "Fact 3 (e.g. ${isTamil ? 'காற்றின் வேகம்: 14 km/h' : 'Wind speed: 14 km/h'})"
+    "Fact 1 (e.g. ${isTamil ? 'நாளை மழை பெய்ய 80% வாய்ப்புள்ளது' : 'There is about an 80% chance of rain tomorrow'})",
+    "Fact 2 (e.g. ${isTamil ? 'வெப்பநிலை சுமார் 29°C ஆக இருக்கும்' : 'Temperatures should reach around 29°C'})",
+    "Fact 3 (e.g. ${isTamil ? 'காற்று சுமார் 14 கிமீ/மணி வேகத்தில் வீசும்' : 'Winds picking up to about 14 km/h'})"
   ],
   "advisory": [
-    "Specific actionable recommendation for the ${context.role} based strictly on the approved rules in CONTEXT"
+    "One specific recommendation for the ${context.role}, using only the approved rules in CONTEXT as your source of what to recommend — but phrase it as if directly answering the USER QUESTION above. Vary your wording naturally; do not repeat the rule text verbatim."
   ],
   "localTrust": ${
     context.localTrust
@@ -51,7 +51,6 @@ Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences
  * Generates an advisory via Gemini with grounding verification and regeneration loop.
  */
 async function generateAdvisoryWithGrounding({ query, context }) {
-  const model = getGeminiModel();
   let attempts = 0;
   let lastFailureReason = null;
   let lastAdvisory = null;
@@ -62,8 +61,7 @@ async function generateAdvisoryWithGrounding({ query, context }) {
 
     try {
       const prompt = buildPrompt(query, context, lastFailureReason);
-      const result = await model.generateContent(prompt);
-      const rawText = result.response.text().trim();
+      const rawText = (await generateAdvisoryText(prompt)).trim();
 
       // Clean markdown code fences if model accidentally wrapped in ```json
       const cleanedJson = rawText.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();

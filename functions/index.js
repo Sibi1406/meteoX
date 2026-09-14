@@ -128,9 +128,6 @@ exports.handleQuery = onCall(
           query,
           context: ragContext,
         });
-        const authoritativeAdvisory = evaluateRoleAdvisory(effectiveRole, weather, language);
-        responsePayload.advisory = [authoritativeAdvisory];
-        responsePayload.answer = authoritativeAdvisory;
       }
 
       // Step 6: Log query audit record to Firestore (Spec §14)

@@ -6,22 +6,38 @@ const GENERAL_RULES = {
   rules: [
     {
       condition: "rainProbability >= 70 || rainfallMm >= 10",
-      advisory: "High chance of rain. Remember to carry an umbrella or raincoat when stepping out.",
+      advisory: [
+        "Rain looks likely, so keep an umbrella or raincoat handy when you go out.",
+        "You may want to carry rain protection today because showers are quite likely.",
+        "There is a good chance of rain. Plan your trip with an umbrella or raincoat nearby.",
+      ],
       tamilAdvisory: "மழை பெய்ய அதிக வாய்ப்புள்ளதால் வெளியே செல்லும்போது குடை அல்லது மழைக்கோட் எடுத்துச் செல்லவும்.",
     },
     {
       condition: "temperatureC >= 38",
-      advisory: "Hot weather prevailing. Stay well-hydrated, avoid direct sun exposure between 12 PM and 3 PM, and wear light cotton clothes.",
+      advisory: [
+        "It will be hot. Drink plenty of water, avoid the midday sun, and wear light clothing.",
+        "High heat is expected, so stay hydrated and try to avoid direct sun from noon to 3 PM.",
+        "Keep cool today with water, light cotton clothes, and less time in the afternoon sun.",
+      ],
       tamilAdvisory: "வெயில் அதிகமாக இருப்பதால் அதிகளவு தண்ணீர் குடிக்கவும், நண்பகல் 12 முதல் 3 மணி வரை வெளியே செல்வதைத் தவிர்க்கவும்.",
     },
     {
       condition: "windSpeedKmh >= 35",
-      advisory: "Gusty winds expected. Exercise caution when commuting on two-wheelers and avoid standing under loose tree branches.",
+      advisory: [
+        "Strong winds may make travel tricky. Ride carefully and stay away from loose branches.",
+        "Take care on two-wheelers today, and avoid standing near trees or anything that could come loose.",
+        "Gusty weather is expected, so slow down on the road and choose sheltered places when possible.",
+      ],
       tamilAdvisory: "பலத்த காற்று வீசுவதால் இருசக்கர வாகனங்களில் செல்லும்போது எச்சரிக்கையாக இருக்கவும்.",
     },
     {
       condition: "default",
-      advisory: "Weather is pleasant and clear. Suitable for outdoor travel, commute, and personal activities.",
+      advisory: [
+        "The weather looks comfortable for travel and outdoor activities.",
+        "Conditions look calm, so your usual outdoor plans should be fine.",
+        "It is a good day for normal travel and outdoor activities, with no major weather concern showing.",
+      ],
       tamilAdvisory: "வானிலை இனிமையாகவும் தெளிவாகவும் உள்ளதால் பயணங்கள் மற்றும் வெளிப்புறப் பணிகளுக்கு ஏற்றதாக உள்ளது.",
     },
   ],
@@ -33,16 +49,21 @@ function getGeneralAdvisory(weather, lang = "en") {
   const temp = weather.temperatureC || 30;
   const wind = weather.tomorrow?.windSpeedKmh || weather.windSpeedKmh || 0;
 
+  const choose = (rule) => {
+    const selected = lang === "ta" ? rule.tamilAdvisory : rule.advisory;
+    const options = Array.isArray(selected) ? selected : [selected];
+    return options[Math.floor(Math.random() * options.length)];
+  };
   if (rainProb >= 70 || rainfall >= 10) {
-    return lang === "ta" ? GENERAL_RULES.rules[0].tamilAdvisory : GENERAL_RULES.rules[0].advisory;
+    return choose(GENERAL_RULES.rules[0]);
   }
   if (temp >= 38) {
-    return lang === "ta" ? GENERAL_RULES.rules[1].tamilAdvisory : GENERAL_RULES.rules[1].advisory;
+    return choose(GENERAL_RULES.rules[1]);
   }
   if (wind >= 35) {
-    return lang === "ta" ? GENERAL_RULES.rules[2].tamilAdvisory : GENERAL_RULES.rules[2].advisory;
+    return choose(GENERAL_RULES.rules[2]);
   }
-  return lang === "ta" ? GENERAL_RULES.rules[3].tamilAdvisory : GENERAL_RULES.rules[3].advisory;
+  return choose(GENERAL_RULES.rules[3]);
 }
 
 module.exports = { GENERAL_RULES, getGeneralAdvisory };

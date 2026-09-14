@@ -16,6 +16,9 @@ function buildRagContext({
   dateTime = "tomorrow",
 }) {
   const targetForecast = dateTime === "today" ? weather.today : (weather.tomorrow || weather.today);
+  const forecastDays = dateTime === "forecast_period" || dateTime === "next_week"
+    ? (weather.daily || []).slice(0, dateTime === "next_week" ? 7 : 5)
+    : [];
 
   return {
     userQuery,
@@ -45,6 +48,7 @@ function buildRagContext({
         windSpeedKmh: targetForecast?.windSpeedKmh,
         weatherCondition: targetForecast?.weatherCondition,
       },
+      forecastDays,
       sources: weather.sources || ["open-meteo"],
       fromCache: weather.fromCache || false,
     },

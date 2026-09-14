@@ -1,5 +1,8 @@
 // ai/gemini.js — Google Gemini API Client (Spec §19, §20)
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Migrated from the deprecated `@google/generative-ai` SDK to `@google/genai`.
+const { GoogleGenAI } = require("@google/genai");
+
+const MODEL_NAME = "gemini-3.6-flash";
 
 function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -8,18 +11,24 @@ function getGeminiClient() {
       "GEMINI_API_KEY is not set. Please set the secret or environment variable."
     );
   }
-  return new GoogleGenerativeAI(apiKey);
+  return new GoogleGenAI({ apiKey });
 }
 
-function getGeminiModel() {
-  const genAI = getGeminiClient();
-  return genAI.getGenerativeModel({
-    model: "gemini-3.6-flash",
-    generationConfig: {
+/**
+ * Calls Gemini with the given prompt and returns the raw text response.
+ * In @google/genai, response.text is a property rather than a method.
+ */
+async function generateAdvisoryText(prompt) {
+  const ai = getGeminiClient();
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: prompt,
+    config: {
       responseMimeType: "application/json",
       temperature: 0.1, // very low temperature for maximum factuality & grounding
     },
   });
+  return response.text;
 }
 
 // System prompt strictly matching Spec §20
@@ -60,7 +69,6 @@ Never contradict official emergency warnings.
 `.trim();
 
 module.exports = {
-  getGeminiClient,
-  getGeminiModel,
+  generateAdvisoryText,
   GEMINI_SYSTEM_PROMPT,
 };

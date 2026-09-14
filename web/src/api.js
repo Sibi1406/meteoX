@@ -131,7 +131,7 @@ export const api = {
       await ensureSignedIn();
       const result = await withTimeout(
         () => httpsCallable(functions, "handleQuery")(data),
-        10000,
+        60000,
         "handleQuery timed out"
       );
       return result.data;

@@ -22,7 +22,12 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
   const advisoryList = advisoryData.advisory || [];
   const localTrust = advisoryData.localTrust || message.localTrust;
   const answer = advisoryData.answer || message.text;
-  const speechText = [answer, ...advisoryList]
+  const normalizedAnswer = answer?.trim().toLowerCase();
+  const uniqueAdvisories = advisoryList.filter(
+    (advisory, index, list) => list.findIndex((item) => item.trim().toLowerCase() === advisory.trim().toLowerCase()) === index
+  );
+  const showAnswer = answer && !uniqueAdvisories.some((advisory) => advisory.trim().toLowerCase() === normalizedAnswer);
+  const speechText = [showAnswer ? answer : null, ...uniqueAdvisories]
     .filter(Boolean)
     .join(". ");
 
@@ -30,7 +35,7 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
     <div className="chat-row bot">
       <div className="bubble bot">
         {/* Natural Language Answer */}
-        {answer && (
+        {showAnswer && (
           <div className="bot-answer-row">
             <div className="bot-answer">{answer}</div>
             {onSpeak && (
@@ -62,13 +67,13 @@ export default function ChatMessage({ message, profile, onSpeak, speaking, onFee
         )}
 
         {/* 2. Role Advisory Section with Duotone RoleIcon */}
-        {advisoryList.length > 0 && (
+        {uniqueAdvisories.length > 0 && (
           <div className="chat-advisory-block">
             <div className="section-label" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
               <RoleIcon role={role} size={16} />
               <span>{t("advisoryTitle")} ({t(role)})</span>
             </div>
-            {advisoryList.map((adv, idx) => (
+            {uniqueAdvisories.map((adv, idx) => (
               <p key={idx} className="advisory-sentence">
                 {adv}
               </p>

@@ -11,6 +11,10 @@ function isTamilText(text) {
  * Resolves date/time period from query.
  */
 function resolveDateTime(queryLower) {
+  if (/\b(?:5|five)\s*-?\s*day\b/.test(queryLower) || queryLower.includes("outlook")) {
+    return "forecast_period";
+  }
+
   for (const [dateKey, mapping] of Object.entries(DATE_KEYWORDS)) {
     for (const phrase of mapping.ta) {
       if (queryLower.includes(phrase)) return dateKey;

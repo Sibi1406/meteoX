@@ -15,6 +15,7 @@ function verifyGrounding(responseJson, context) {
   const contextStr = JSON.stringify(context);
   const contextWeather = context.weather || {};
   const targetForecast = contextWeather.targetForecast || {};
+  const forecastDays = contextWeather.forecastDays || [];
   const contextTrust = context.localTrust;
 
   // 1. Verify Trust Score claim
@@ -50,6 +51,7 @@ function verifyGrounding(responseJson, context) {
         contextWeather.rainProbability,
         contextWeather.humidityPercent,
         targetForecast.rainProbability,
+        ...forecastDays.map((day) => day.rainProbability),
         contextTrust ? Math.round(contextTrust.accuracyScore * 100) : null,
         contextTrust ? Math.round(contextTrust.trustScore * 100) : null,
       ].filter((x) => x != null);
@@ -70,6 +72,7 @@ function verifyGrounding(responseJson, context) {
         contextWeather.temperatureC,
         targetForecast.temperatureMaxC,
         targetForecast.temperatureMinC,
+        ...forecastDays.flatMap((day) => [day.tempMaxC, day.tempMinC]),
       ].filter((x) => x != null);
 
       const isFound = validTemps.some((vt) => Math.abs(vt - num) <= 2);
@@ -87,6 +90,7 @@ function verifyGrounding(responseJson, context) {
       const validMm = [
         contextWeather.rainfallMm,
         targetForecast.rainfallMm,
+        ...forecastDays.map((day) => day.rainfallMm),
       ].filter((x) => x != null);
 
       const isFound = validMm.some((vm) => Math.abs(vm - num) <= 2);
