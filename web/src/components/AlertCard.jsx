@@ -10,7 +10,7 @@ export default function AlertCard({ alert }) {
   const description = isTamil ? (alert.tamilDescription || alert.description) : alert.description;
 
   return (
-    <div className={`alert-card severity-${alert.severity || "medium"}`}>
+    <div className={`alert-card glass-card card-advisory severity-${alert.severity || "medium"}`}>
       <div className="alert-card-header">
         <span className="alert-badge">⚠️ {t("autoWeatherAlert")}</span>
         {alert.metric && <span className="alert-metric">{alert.metric}</span>}

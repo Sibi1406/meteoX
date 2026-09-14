@@ -13,7 +13,7 @@ export default function WeatherCard({ weather, title = null }) {
   const wind = weather.windSpeedKmh != null ? `${weather.windSpeedKmh} km/h` : "--";
 
   return (
-    <div className="weather-card">
+    <div className="weather-card glass-card card-data">
       <div className="weather-card-header">
         <span className="weather-title">{cardTitle}</span>
         <span className="weather-badge">

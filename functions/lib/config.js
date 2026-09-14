@@ -2,7 +2,7 @@
 
 module.exports = {
   CACHE_TTL_MINUTES: 15,
-  MAX_REGENERATIONS: 2,
+  MAX_REGENERATIONS: 1,
   
   ROLES: {
     FARMER: "farmer",

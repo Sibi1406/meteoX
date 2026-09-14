@@ -145,10 +145,7 @@ exports.handleQuery = onCall(
         createdAt: now,
       };
 
-      const [logRef] = await Promise.all([
-        db.collection("query_logs").add(logDoc),
-        db.collection("queries").add(logDoc),
-      ]);
+      const logRef = await db.collection("queries").add(logDoc);
 
       return {
         queryId: logRef.id,

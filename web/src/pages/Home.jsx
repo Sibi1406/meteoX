@@ -76,7 +76,8 @@ export default function Home({ profile }) {
     const match = typeof hour.time === "string" && hour.time.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})/);
     if (!match) return false;
     const hourDate = match[1];
-    return hourDate === currentDate;
+    const hourValue = Number(match[2]);
+    return hourDate === currentDate && hourValue >= currentTime.getHours();
   });
   const dailyForecast = weather?.daily || weather?.dailyForecast || [];
   const currentCondition = interpretWeatherCode(weather?.weatherCode ?? 0, isTamil);
@@ -95,7 +96,7 @@ export default function Home({ profile }) {
 
   return (
     <div className="page dashboard-page-wide home-intelligence-page">
-      <div className="dashboard-header-bar">
+      <div className="dashboard-header-bar glass-card card-system">
         <div className="location-cluster-title">
           <span className="live-radar-tag"><span className="live-dot-green"></span> {t("liveWeatherData")}</span>
           <h2>{cluster.displayName || district}</h2>
@@ -111,7 +112,7 @@ export default function Home({ profile }) {
 
       <div className="dashboard-main-grid">
         <div className="dashboard-primary-col">
-          <div className="hero-weather-card-glass">
+          <div className="hero-weather-card-glass glass-card card-data">
             <div className="hero-weather-top">
               <div className="hero-temp-group">
                 <span className="hero-weather-icon">{currentCondition.icon}</span>
@@ -127,19 +128,19 @@ export default function Home({ profile }) {
             </div>
           </div>
 
-          {hourlyToday.length > 0 && <div className="dashboard-section-card"><div className="section-card-header"><div><h4>⏰ Today, hour by hour</h4><p className="section-subtext">Live temperature and rain probability</p></div><span className="section-meta">{hourlyToday.length} readings</span></div><div className="hourly-forecast-row">{hourlyToday.map((hour, index) => <div key={index} className="hourly-chip"><span className="hourly-time">{hourLabel(hour.time)}</span><span className="hourly-icon">{interpretWeatherCode(hour.weatherCode, isTamil).icon}</span><span className="hourly-temp">{hour.temperatureC ?? "--"}°</span><span className="hourly-rain">💧 {hour.rainProbability ?? "--"}%</span></div>)}</div></div>}
+          {hourlyToday.length > 0 && <div className="dashboard-section-card glass-card card-data"><div className="section-card-header"><div><h4>⏰ Today, hour by hour</h4><p className="section-subtext">Live temperature and rain probability</p></div><span className="section-meta">{hourlyToday.length} readings</span></div><div className="hourly-forecast-row">{hourlyToday.map((hour, index) => <div key={index} className="hourly-chip"><span className="hourly-time">{hourLabel(hour.time)}</span><span className="hourly-icon">{interpretWeatherCode(hour.weatherCode, isTamil).icon}</span><span className="hourly-temp">{hour.temperatureC ?? "--"}°</span><span className="hourly-rain">💧 {hour.rainProbability ?? "--"}%</span></div>)}</div></div>}
 
           <div className="prominent-advisory-section"><AdvisoryCard role={role} advisory={data?.roleAdvisory} title={role === "farmer" ? t("agriculturalAdvisory") : null} /></div>
 
         </div>
 
         <div className="home-outlook-layout">
-          {dailyForecast.length > 0 && <div className="dashboard-section-card home-outlook-card"><div className="section-card-header"><h4>📅 {t("weeklyOutlook")}</h4><span className="section-meta">Multi-Day Ensemble</span></div><div className="daily-forecast-list">{dailyForecast.map((day, index) => <div key={index} className="daily-forecast-row"><span className="daily-name">{index === 0 ? "Today" : index === 1 ? "Tomorrow" : new Date(day.date).toLocaleDateString([], { weekday: "short" })}</span><span className="daily-icon">{interpretWeatherCode(day.weatherCode, isTamil).icon}</span><span className="daily-condition">{day.weatherCondition || "--"}</span><span className="daily-rain">💧 {day.rainProbability ?? "--"}%</span><div className="daily-temp-bar"><span className="t-min">{day.tempMinC ?? "--"}°</span><div className="t-bar"><div className="t-fill" style={{ width: `${Math.min(100, Math.max(20, ((day.tempMaxC ?? 0) - (day.tempMinC ?? 0)) * 8))}%` }}></div></div><span className="t-max">{day.tempMaxC ?? "--"}°</span></div></div>)}</div></div>}
+          {dailyForecast.length > 0 && <div className="dashboard-section-card home-outlook-card glass-card card-data"><div className="section-card-header"><h4>📅 {t("weeklyOutlook")}</h4><span className="section-meta">Multi-Day Ensemble</span></div><div className="daily-forecast-list">{dailyForecast.map((day, index) => <div key={index} className="daily-forecast-row"><span className="daily-name">{index === 0 ? "Today" : index === 1 ? "Tomorrow" : new Date(day.date).toLocaleDateString([], { weekday: "short" })}</span><span className="daily-icon">{interpretWeatherCode(day.weatherCode, isTamil).icon}</span><span className="daily-condition">{day.weatherCondition || "--"}</span><span className="daily-rain">💧 {day.rainProbability ?? "--"}%</span><div className="daily-temp-bar"><span className="t-min">{day.tempMinC ?? "--"}°</span><div className="t-bar"><div className="t-fill" style={{ width: `${Math.min(100, Math.max(20, ((day.tempMaxC ?? 0) - (day.tempMinC ?? 0)) * 8))}%` }}></div></div><span className="t-max">{day.tempMaxC ?? "--"}°</span></div></div>)}</div></div>}
 
           <div className="dashboard-sidebar-col">
             <div className="trust-score-section"><TrustScore trustData={data?.trustScore} clusterName={cluster.displayName || district} /></div>
             <div className="dashboard-feedback-section"><Feedback forecastId={`home_${cluster.clusterId || district.toLowerCase()}_${tomorrow?.date || "today"}`} lat={lat} lng={lng} role={role} district={district} onCalibrated={(newScore) => setData((previous) => ({ ...previous, trustScore: { ...previous?.trustScore, ...newScore } }))} /></div>
-            <div className="demo-mode-panel"><div className="demo-header"><span className="demo-icon">🧪</span><span className="demo-title">{t("demoMode")}</span></div><p className="demo-desc">{t("demoModeDesc")}</p><button className="btn-secondary demo-trigger-btn" onClick={handleTriggerDemoAlert}>⚡ {t("simulatedDemoAlert")}</button></div>
+            <div className="demo-mode-panel glass-card card-system"><div className="demo-header"><span className="demo-icon">🧪</span><span className="demo-title">{t("demoMode")}</span></div><p className="demo-desc">{t("demoModeDesc")}</p><button className="btn-secondary demo-trigger-btn" onClick={handleTriggerDemoAlert}>⚡ {t("simulatedDemoAlert")}</button></div>
           </div>
         </div>
       </div>

@@ -39,7 +39,7 @@ export default function RoleSelect({ initialProfile, onDone }) {
   }
 
   return (
-    <div className="onboarding-screen screen">
+    <div className="onboarding-screen glass-card card-system screen">
       {/* Onboarding Header with Step Indicator */}
       <div className="onboarding-top">
         <div className="onboarding-step-indicator" style={{ width: "100%" }}>

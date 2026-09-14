@@ -176,7 +176,7 @@ export default function Chat({ profile }) {
   const isInitialState = messages.length === 1 && messages[0].isWelcome;
 
   return (
-    <div className="chat-component">
+    <div className="chat-component glass-card card-system">
       {/* Quick Prompts Bar (Top when chat is active) */}
       {!isInitialState && (
         <div className="quick-prompts-bar">
@@ -193,7 +193,7 @@ export default function Chat({ profile }) {
         {isInitialState ? (
           /* Reduced empty space on initial state (Spec Item 6) */
           <div className="chat-empty-state">
-            <div className="chat-welcome-card">
+            <div className="chat-welcome-card glass-card card-system">
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <RoleIcon role={role} size={28} />
               <h3 style={{ margin: 0, fontSize: "18px" }}>

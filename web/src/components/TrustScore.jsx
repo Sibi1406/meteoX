@@ -6,7 +6,7 @@ export default function TrustScore({ trustData, clusterName = "Local Cluster" })
 
   if (!trustData || trustData.sampleCount == null) {
     return (
-      <div className="trust-card empty">
+      <div className="trust-card glass-card card-system empty">
         <div className="trust-header">
           <span className="trust-icon">🎯</span>
           <span className="trust-title">{t("localReliability")}</span>
@@ -24,7 +24,7 @@ export default function TrustScore({ trustData, clusterName = "Local Cluster" })
   const percentage = trustData.trustScore != null ? Math.round(trustData.trustScore * 100) : null;
 
   return (
-    <div className="trust-card">
+    <div className="trust-card glass-card card-system">
       <div className="trust-header">
         <div className="trust-title-group">
           <span className="trust-icon">🎯</span>

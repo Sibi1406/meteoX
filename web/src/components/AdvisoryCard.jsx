@@ -19,7 +19,7 @@ export default function AdvisoryCard({ role = "farmer", advisory, title = null }
   const advisoryList = Array.isArray(advisory) ? advisory : [advisory];
 
   return (
-    <div className={`advisory-card ${meta.colorClass}`}>
+    <div className={`advisory-card glass-card card-advisory ${meta.colorClass}`}>
       <div className="advisory-header" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <RoleIcon role={role} size={22} />
         <span className="advisory-title">{headerTitle}</span>

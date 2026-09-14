@@ -67,7 +67,7 @@ export default function App() {
   return (
     <div className="app-shell">
       {/* Responsive Top Application Bar */}
-      <header className="topbar">
+      <header className="topbar glass-card card-system">
         <div className="topbar-inner">
           {/* Brand Logo & Live Radar */}
           <Link to="/" className="brand-area">

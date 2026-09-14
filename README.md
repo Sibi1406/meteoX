@@ -92,6 +92,30 @@ MeteoX is an advanced meteorological platform designed for farmers, fishermen, m
 * **Languages**: English (`en`) and Tamil (`ta`) bilingual interface with Bhashini adapter interface.
 * **Alerts**: Firebase Cloud Messaging (FCM), with role-based vulnerability filtering.
 
+## 3. Database Maintenance
+
+Demo data and duplicate query logs can be inspected with the dry-run cleanup script:
+
+```bash
+node scripts/cleanupDatabase.js --project meteox-9d084
+```
+
+The script never deletes by default. Review its collection audit and document samples before adding `--confirm`:
+
+```bash
+node scripts/cleanupDatabase.js --project meteox-9d084 --confirm
+```
+
+Run individual maintenance targets with `--only demo`, `--only query-logs`, `--only weather-cache`, or `--only test-users`. The weather-cache threshold can be changed with `--older-than-minutes 60`.
+
+For test-user cleanup, provide only the Firebase Authentication testing phone numbers explicitly:
+
+```bash
+node scripts/cleanupDatabase.js --project meteox-9d084 --only test-users --test-phones "+919876543210,+919876543211"
+```
+
+The script requires `--project` to match the active `GCLOUD_PROJECT` or `firebase use` project. It uses paginated Firestore reads and 400-document batches. Verify Firestore TTL policies in the Firebase Console before relying on manual weather-cache pruning.
+
 ---
 
 powered by [Open-Meteo](https://open-meteo.com) under CC BY 4.0. AI explanations powered by Google Gemini API.

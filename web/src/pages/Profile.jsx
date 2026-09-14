@@ -50,7 +50,7 @@ export default function Profile({ profile, onUpdateProfile }) {
         <LanguageSelect />
       </div>
 
-      <div className="profile-card">
+      <div className="profile-card glass-card card-system">
         {/* User Session Badge with friendly label (Spec Item 8) */}
         <div className="user-id-badge">
           <span>{userIdentifier}</span>

@@ -107,7 +107,7 @@ export default function LocationSelect({ currentLocation, onSelect }) {
   }
 
   return (
-    <div className="location-select-box">
+    <div className="location-select-box glass-card card-system">
       <button className="btn-secondary gps-btn" onClick={detectGps} disabled={busy}>
         📍 {busy ? t("detectingGps") : t("useGps")}
       </button>

@@ -37,7 +37,7 @@ export default function Feedback({ forecastId, lat, lng, role, district, onCalib
 
   if (submitted) {
     return (
-      <div className="feedback-container submitted">
+      <div className="feedback-container glass-card card-system submitted">
         <span className="check-icon">✓</span>
         <div className="feedback-submitted-text">
           <p>{t("feedbackThanks")}</p>
@@ -52,7 +52,7 @@ export default function Feedback({ forecastId, lat, lng, role, district, onCalib
   }
 
   return (
-    <div className="feedback-container">
+    <div className="feedback-container glass-card card-system">
       <div className="feedback-header">
         <span className="feedback-icon">📊</span>
         <span className="feedback-question">{t("didItRain")}</span>

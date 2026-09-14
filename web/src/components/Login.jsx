@@ -154,51 +154,10 @@ export default function Login({ onLoggedIn }) {
           </button>
         </div>
 
-        {/* Interactive Feature Highlights / Preview Cards */}
-        <div className="landing-preview-grid">
-          <div className="landing-card-glass">
-            <div className="card-glass-header">
-              <span className="card-icon">📍</span>
-              <span className="card-tag">Tirunelveli Cluster</span>
-            </div>
-            <div className="card-temp-row">
-              <span className="card-temp">30°C</span>
-              <span className="card-condition">🌧️ Live Radar Synced</span>
-            </div>
-            <div className="card-micro-bar">
-              <div className="micro-bar-fill" style={{ width: "80%" }}></div>
-            </div>
-            <span className="card-footer-text">{t("liveWeatherData")}</span>
-          </div>
-
-          <div className="landing-card-glass highlight-green">
-            <div className="card-glass-header">
-              <span className="card-icon">🌱</span>
-              <span className="card-tag">{t("farmer")} Advisory</span>
-            </div>
-            <p className="card-advisory-quote">
-              &ldquo;Delay fertilizer and pesticide application. High chance of nutrient runoff before evening rain.&rdquo;
-            </p>
-            <span className="card-footer-text">{t("poweredByAi")}</span>
-          </div>
-
-          <div className="landing-card-glass">
-            <div className="card-glass-header">
-              <span className="card-icon">🎯</span>
-              <span className="card-tag">{t("localReliability")}</span>
-            </div>
-            <div className="card-trust-row">
-              <span className="trust-big-stat">86%</span>
-              <span className="trust-stat-desc">{t("highConfidence")} (48 {t("observations")})</span>
-            </div>
-            <span className="card-footer-text">{t("selfCalibratingNote")}</span>
-          </div>
-        </div>
-
         {/* Authentication Card Section */}
         {showAuthCard && (
           <div className="landing-auth-modal" ref={authCardRef}>
-            <div className="login-card glass-modal-card">
+            <div className="login-card glass-modal-card glass-card card-system">
               <div className="auth-card-header">
                 <div>
                   <h3>{t("signInToContinue")}</h3>
