@@ -46,7 +46,12 @@ export default function Chat({ profile }) {
 
   // Auto-scroll feed
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
+    const feed = logRef.current;
+    if (!feed) return;
+
+    requestAnimationFrame(() => {
+      feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
+    });
   }, [messages]);
 
   useEffect(() => {
@@ -65,7 +70,7 @@ export default function Chat({ profile }) {
       t("quickPrompt3"),
     ];
 
-  async function handleSend(customQuery = null) {
+  async function handleSend(customQuery = null, fromVoice = false) {
     const query = (customQuery || input).trim();
     if (!query || busy) return;
 
@@ -109,6 +114,12 @@ export default function Chat({ profile }) {
           text: data.advisory?.answer,
         },
       ]);
+
+      if (fromVoice) {
+        const answer = data.advisory?.answer || "";
+        const advisories = data.advisory?.advisory || [];
+        handleSpeak([answer, ...advisories].filter(Boolean).join(". "));
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -118,6 +129,7 @@ export default function Chat({ profile }) {
           text: t("chatError"),
         },
       ]);
+      if (fromVoice) handleSpeak(t("chatError"));
     } finally {
       setBusy(false);
     }
@@ -160,7 +172,7 @@ export default function Chat({ profile }) {
         const transcript = event.results[0]?.[0]?.transcript;
         if (transcript) {
           setInput(transcript);
-          handleSend(transcript);
+          handleSend(transcript, true);
         }
       };
       rec.onend = () => {
@@ -289,7 +301,7 @@ export default function Chat({ profile }) {
           aria-label="Voice input"
           disabled={busy}
         >
-          {listening ? "🔴" : "🎙️"}
+          <span className="mic-icon" aria-hidden="true">{listening ? "🔴" : "🎙️"}</span>
         </button>
         <input
           value={input}
