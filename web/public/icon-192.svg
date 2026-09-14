@@ -2,5 +2,5 @@
   <rect width="192" height="192" rx="36" fill="#1F5C55"/>
   <circle cx="70" cy="76" r="30" fill="#D9A441"/>
   <path d="M50 120 C40 120 32 112 32 102 C32 94 38 86 46 84 C48 70 60 60 74 60 C86 60 96 67 100 78 C104 76 108 76 112 76 C124 76 134 86 134 98 C144 100 152 108 152 118 C152 130 142 140 130 140 L50 140 C38 140 30 132 30 120" fill="#EAF2F5" opacity="0.95"/>
-  <text x="96" y="172" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">WeatherGPT</text>
+  <text x="96" y="172" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">MeteoX</text>
 </svg>
