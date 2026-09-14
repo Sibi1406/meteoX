@@ -107,7 +107,6 @@ export default function Chat({ profile }) {
   }
 
   function handleQuickPrompt(promptText) {
-    setInput(promptText);
     handleSend(promptText);
   }
 
