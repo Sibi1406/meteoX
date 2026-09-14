@@ -1884,6 +1884,33 @@ input, select, textarea {
   overscroll-behavior: contain;
 }
 
+.chat-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.chat-welcome-card {
+  width: min(100%, 720px);
+  padding: 24px 28px;
+}
+
+.chat-welcome-text {
+  margin: 14px 0 18px;
+  max-width: 62ch;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.chat-example-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Chat Message Bubbles */
 .chat-row {
   display: flex;
@@ -2051,6 +2078,20 @@ input, select, textarea {
   .chat-feed {
     padding: 16px 12px;
     gap: 12px;
+  }
+
+  .chat-empty-state {
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+
+  .chat-welcome-card {
+    padding: 18px 16px;
+  }
+
+  .chat-welcome-text {
+    margin: 10px 0 14px;
+    font-size: 14px;
   }
 
   .bubble {
