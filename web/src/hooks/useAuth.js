@@ -1,7 +1,13 @@
 // hooks/useAuth.js — Authentication hook (Spec §5)
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut as fbSignOut } from "firebase/auth";
-import { auth, googleProvider, signInWithPopup, signInAnonymously } from "../firebase";
+import {
+  auth,
+  googleProvider,
+  signInWithPopup,
+  signInAnonymously,
+  firebaseConfigMissing,
+} from "../firebase";
 
 export function useAuth() {
   const [user, setUser] = useState(undefined); // undefined: loading, null: unauthenticated, object: user
@@ -14,6 +20,14 @@ export function useAuth() {
         setUser(null);
       }
     }, 2000);
+
+    if (!auth) {
+      if (isMounted) setUser(null);
+      return () => {
+        isMounted = false;
+        window.clearTimeout(fallbackTimer);
+      };
+    }
 
     const unsubscribe = onAuthStateChanged(
       auth,
@@ -40,6 +54,9 @@ export function useAuth() {
 
   async function loginWithGoogle() {
     setAuthError("");
+    if (!auth || !googleProvider || !signInWithPopup) {
+      throw new Error("Google sign-in is unavailable because Firebase is not configured.");
+    }
     try {
       const cred = await signInWithPopup(auth, googleProvider);
       return cred.user;
@@ -51,6 +68,9 @@ export function useAuth() {
 
   async function loginAsGuest() {
     setAuthError("");
+    if (!auth || !signInAnonymously) {
+      return { uid: "guest-demo-user", isAnonymous: true, email: null, displayName: "Guest Demo User" };
+    }
     try {
       const cred = await signInAnonymously(auth);
       return cred.user;
@@ -62,7 +82,7 @@ export function useAuth() {
 
   async function logout() {
     try {
-      await fbSignOut(auth);
+      if (auth) await fbSignOut(auth);
       setUser(null);
     } catch (err) {
       console.error("Sign out error", err);
@@ -77,5 +97,6 @@ export function useAuth() {
     loginWithGoogle,
     loginAsGuest,
     logout,
+    firebaseConfigMissing,
   };
 }

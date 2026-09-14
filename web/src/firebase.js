@@ -13,21 +13,24 @@ import {
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getMessaging, getToken, isSupported as isMessagingSupported } from "firebase/messaging";
+import { getFirebaseWebConfig, hasFirebaseWebConfig } from "./firebaseConfig";
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-};
+const { config: firebaseConfig, missing } = getFirebaseWebConfig(import.meta.env);
+export const firebaseConfigMissing = missing.length > 0;
 
-export const app = initializeApp(firebaseConfig);
+const safeFirebaseConfig = hasFirebaseWebConfig(firebaseConfig) ? firebaseConfig : {};
+
+const fallbackApp = typeof globalThis !== "undefined" ? globalThis.__METEOX_FIREBASE_APP__ || null : null;
+
+export const app = fallbackApp || (Object.keys(safeFirebaseConfig).length > 0 ? initializeApp(safeFirebaseConfig) : null);
+
+if (firebaseConfigMissing) {
+  console.warn("Firebase configuration is incomplete; falling back to demo mode. Add values to web/.env to enable account and cloud features.", missing);
+}
+
 let analyticsInstance = null;
 const isLocalhost = typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-if (!isLocalhost) {
+if (app && !isLocalhost) {
   try {
     analyticsInstance = getAnalytics(app);
   } catch (error) {
@@ -35,16 +38,16 @@ if (!isLocalhost) {
   }
 }
 export const analytics = analyticsInstance;
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth = app ? getAuth(app) : null;
+export const db = app ? getFirestore(app) : null;
 // Match the region set in functions/index.js (setGlobalOptions).
-export const functions = getFunctions(app, "asia-south1");
-export const googleProvider = new GoogleAuthProvider();
+export const functions = app ? getFunctions(app, "asia-south1") : null;
+export const googleProvider = app ? new GoogleAuthProvider() : null;
 
 export { signInWithPopup, signInAnonymously };
 
 // Connect to emulators if explicitly configured via env
-if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === "true") {
+if (app && import.meta.env.VITE_USE_FIREBASE_EMULATOR === "true") {
   connectAuthEmulator(auth, "http://localhost:9099");
   connectFirestoreEmulator(db, "localhost", 8080);
   connectFunctionsEmulator(functions, "localhost", 5001);

@@ -15,7 +15,7 @@ import ChatPage from "./pages/ChatPage";
 import Profile from "./pages/Profile";
 
 export default function App() {
-  const { user, loading: authLoading, setUser } = useAuth();
+  const { user, loading: authLoading, setUser, firebaseConfigMissing } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile(user);
   const { t } = useLanguage();
 
@@ -31,6 +31,11 @@ export default function App() {
   if (!user) {
     return (
       <div className="app-shell landing-shell">
+        {firebaseConfigMissing && (
+          <div className="firebase-config-warning">
+            Firebase is not configured yet. The app is running in demo mode. Add your Firebase values to web/.env to enable login and live cloud features.
+          </div>
+        )}
         <Login onLoggedIn={setUser} />
       </div>
     );
