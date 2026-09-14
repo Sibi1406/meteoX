@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { getMessaging, isSupported as isMessagingSupported } from "firebase/messaging";
+import { getMessaging, getToken, isSupported as isMessagingSupported } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -53,4 +53,74 @@ if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === "true") {
 export async function getMessagingIfSupported() {
   if (await isMessagingSupported()) return getMessaging(app);
   return null;
+}
+
+let messagingRegistrationPromise;
+
+function logMessagingStatus(message) {
+  if (import.meta.env.DEV) console.info(`[MeteoX messaging] ${message}`);
+}
+
+async function registerMessagingServiceWorker() {
+  if (!messagingRegistrationPromise) {
+    const config = new URLSearchParams({
+      apiKey: firebaseConfig.apiKey || "",
+      authDomain: firebaseConfig.authDomain || "",
+      projectId: firebaseConfig.projectId || "",
+      storageBucket: firebaseConfig.storageBucket || "",
+      messagingSenderId: firebaseConfig.messagingSenderId || "",
+      appId: firebaseConfig.appId || "",
+    });
+    messagingRegistrationPromise = navigator.serviceWorker.register(
+      `/firebase-messaging-sw.js?${config.toString()}`
+    );
+  }
+  return messagingRegistrationPromise;
+}
+
+export async function getFcmTokenIfSupported(userId) {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return { token: null, reason: "Browser notifications are unsupported" };
+  }
+  if (!("serviceWorker" in navigator)) {
+    return { token: null, reason: "Service workers are unsupported" };
+  }
+
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  if (!vapidKey) {
+    logMessagingStatus("VAPID key is not configured");
+    return { token: null, reason: "FCM VAPID key is not configured" };
+  }
+
+  if (!(await isMessagingSupported())) {
+    return { token: null, reason: "Firebase Messaging is unsupported" };
+  }
+
+  let permission = Notification.permission;
+  if (permission === "default") {
+    const permissionRequestKey = userId
+      ? `meteox_notification_permission_requested_${userId}`
+      : null;
+    if (permissionRequestKey && localStorage.getItem(permissionRequestKey) === "true") {
+      return { token: null, reason: "Notification permission has not been granted" };
+    }
+    if (permissionRequestKey) localStorage.setItem(permissionRequestKey, "true");
+    permission = await Notification.requestPermission();
+  }
+  if (permission !== "granted") {
+    return { token: null, reason: `Notification permission ${permission}` };
+  }
+
+  try {
+    const messaging = await getMessagingIfSupported();
+    if (!messaging) return { token: null, reason: "Firebase Messaging is unsupported" };
+    const serviceWorkerRegistration = await registerMessagingServiceWorker();
+    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration });
+    if (!token) return { token: null, reason: "FCM token was not returned" };
+    logMessagingStatus("FCM registration token obtained");
+    return { token, reason: "FCM token obtained" };
+  } catch (error) {
+    console.warn("[MeteoX messaging] FCM registration unavailable:", error.message);
+    return { token: null, reason: "FCM token registration failed" };
+  }
 }

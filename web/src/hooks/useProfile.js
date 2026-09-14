@@ -1,7 +1,7 @@
 // hooks/useProfile.js — User profile hook (Spec §6)
 import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { auth, db, getFcmTokenIfSupported } from "../firebase";
 import { api } from "../api";
 
 export const DEFAULT_LOCATION = {
@@ -38,14 +38,27 @@ export function useProfile(user) {
     let isMounted = true;
     async function loadFirestoreProfile() {
       setLoading(true);
+      let loadedProfile = profile || null;
       try {
         if (!user.uid.startsWith("guest_")) {
           const snap = await getDoc(doc(db, "users", user.uid));
           if (snap.exists() && isMounted) {
             const data = snap.data();
+            loadedProfile = data;
             setProfile(data);
             localStorage.setItem("weathergpt_profile", JSON.stringify(data));
           }
+        }
+
+        if (auth.currentUser?.uid !== user.uid) return;
+        const registration = await getFcmTokenIfSupported(user.uid);
+        if (registration.token && registration.token !== loadedProfile?.fcmToken && isMounted) {
+          await api.createUserProfile({ fcmToken: registration.token });
+          setProfile((current) => ({ ...(current || loadedProfile || {}), fcmToken: registration.token }));
+          localStorage.setItem(
+            "weathergpt_profile",
+            JSON.stringify({ ...(loadedProfile || {}), fcmToken: registration.token })
+          );
         }
       } catch (err) {
         console.warn("Could not load profile from Firestore:", err);

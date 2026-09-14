@@ -328,10 +328,25 @@ exports.checkAlerts = onSchedule(
 // ---------------------------------------------------------------------------
 // 6. triggerDemoAlert — Hackathon Demo Mode simulated alert (Spec §45)
 // ---------------------------------------------------------------------------
-exports.triggerDemoAlert = onCall(async (request) => {
+exports.triggerDemoAlert = onCall(
+  { invoker: "public" },
+  async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in required");
 
-  const { alertType = "heavy_rain", role = "farmer", language = "en" } = request.data || {};
+  const { alertType = "heavy_rain" } = request.data || {};
+  const supportedAlertTypes = ["heavy_rain", "high_wind", "extreme_heat"];
+  if (!supportedAlertTypes.includes(alertType)) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Unsupported alertType. Expected one of: ${supportedAlertTypes.join(", ")}.`
+    );
+  }
+
+  const uid = request.auth.uid;
+  const userSnap = await db.collection("users").doc(uid).get();
+  const user = userSnap.exists ? userSnap.data() : {};
+  const role = user.role || "farmer";
+  const language = user.preferredLanguage || "en";
   const mockWeather = {
     rainfallMm: alertType === "heavy_rain" ? 38 : 0,
     rainProbability: alertType === "heavy_rain" ? 95 : 10,
@@ -340,17 +355,93 @@ exports.triggerDemoAlert = onCall(async (request) => {
   };
 
   const detected = detectSevereWeather(mockWeather);
-  const personalized = buildPersonalizedAlert(detected[0] || {
-    type: alertType,
-    title: "⚠️ Simulated Weather Warning",
-    description: "Demo alert triggered for hackathon evaluation.",
-    tamilDescription: "டெமோ எச்சரிக்கை நிகழ்வு உருவாக்கப்பட்டது.",
-  }, role, language);
+  const relevant = filterAlertsForUser(detected, role);
+  const alert = detected[0] || null;
+
+  if (relevant.length === 0) {
+    const delivery = {
+      fcm: {
+        attempted: false,
+        success: false,
+        reason: `Alert type '${alertType}' is not relevant to the '${role}' role`,
+      },
+    };
+
+    await db.collection("alert_deliveries").add({
+      uid,
+      alert,
+      role,
+      location: user.location || null,
+      channels: user.channels || null,
+      phoneNumber: user.phoneNumber || null,
+      isDemo: true,
+      filteredOut: true,
+      delivery,
+      deliveredAt: new Date(),
+    });
+
+    return {
+      isDemo: true,
+      alert,
+      personalized: null,
+      delivery,
+      filteredOut: true,
+      message: `The ${alertType} alert was filtered out because it is not relevant to the ${role} role.`,
+    };
+  }
+
+  const relevantAlert = relevant[0];
+  const personalized = buildPersonalizedAlert(relevantAlert, role, language);
+  const hasFcmToken = Boolean(user.fcmToken);
+  const pwaEnabled = user.channels?.pwa !== false;
+  const fcmDelivery = {
+    attempted: false,
+    success: false,
+    reason: "FCM token not registered",
+  };
+
+  if (!hasFcmToken) {
+    fcmDelivery.reason = "FCM token not registered";
+  } else if (!pwaEnabled) {
+    fcmDelivery.reason = "PWA notifications disabled";
+  } else {
+    fcmDelivery.attempted = true;
+    try {
+      const result = await sendFcmAlert({
+        userTokens: [user.fcmToken],
+        title: personalized.title,
+        body: personalized.body,
+        alertData: relevantAlert,
+      });
+      fcmDelivery.success = result.sentCount > 0;
+      fcmDelivery.reason = fcmDelivery.success
+        ? "FCM notification sent"
+        : result.error || "FCM notification failed";
+    } catch (err) {
+      fcmDelivery.reason = err.message || "FCM notification failed";
+    }
+  }
+
+  const delivery = { fcm: fcmDelivery };
+  await db.collection("alert_deliveries").add({
+    uid,
+    alert: relevantAlert,
+    title: personalized.title,
+    body: personalized.body,
+    role,
+    location: user.location || null,
+    channels: user.channels || null,
+    phoneNumber: user.phoneNumber || null,
+    isDemo: true,
+    delivery,
+    deliveredAt: new Date(),
+  });
 
   return {
     isDemo: true,
-    alert: detected[0] || null,
+    alert: relevantAlert,
     personalized,
+    delivery,
   };
 });
 
@@ -370,33 +461,37 @@ exports.createUserProfile = onCall(async (request) => {
   const lng = location?.longitude != null ? location.longitude : null;
   const cluster = resolveCluster(lat, lng, district || location?.district);
 
+  const userRef = db.collection("users").doc(uid);
+  const existing = await userRef.get();
+  const existingProfile = existing.exists ? existing.data() : {};
   const profileData = {
     userId: uid,
-    role: role || "farmer",
-    preferredLanguage: preferredLanguage || "en",
-    location: {
-      latitude: lat,
-      longitude: lng,
-      village: location?.village || null,
-      taluk: location?.taluk || null,
-      district: district || location?.district || cluster.displayName,
-      state: location?.state || "Tamil Nadu",
-      country: location?.country || "India",
-      cluster,
-    },
-    channels: channels || {
+    role: role || existingProfile.role || "farmer",
+    preferredLanguage: preferredLanguage || existingProfile.preferredLanguage || "en",
+    location: location
+      ? {
+          ...(existingProfile.location || {}),
+          latitude: lat,
+          longitude: lng,
+          village: location.village || existingProfile.location?.village || null,
+          taluk: location.taluk || existingProfile.location?.taluk || null,
+          district: district || location.district || existingProfile.location?.district || cluster.displayName,
+          state: location.state || existingProfile.location?.state || "Tamil Nadu",
+          country: location.country || existingProfile.location?.country || "India",
+          cluster,
+        }
+      : existingProfile.location || null,
+    channels: channels || existingProfile.channels || {
       pwa: true,
       voice: false,
       whatsapp: false,
       sms: false,
     },
-    fcmToken: fcmToken || null,
-    phoneNumber: request.auth.token.phone_number || null,
+    fcmToken: fcmToken !== undefined ? fcmToken : existingProfile.fcmToken || null,
+    phoneNumber: existingProfile.phoneNumber || request.auth.token.phone_number || null,
     updatedAt: now,
   };
 
-  const userRef = db.collection("users").doc(uid);
-  const existing = await userRef.get();
   if (!existing.exists) {
     profileData.createdAt = now;
   }
