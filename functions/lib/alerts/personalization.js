@@ -1,6 +1,7 @@
 // alerts/personalization.js — Personalized Alert Builder & Multi-channel Delivery (Spec §34, §35, §36)
 const { db, messaging } = require("../../admin");
 const { info, warn, error } = require("../utils/logger");
+const twilio = require("twilio");
 
 /**
  * Builds localized, role-specific alert message.
@@ -80,15 +81,37 @@ class WhatsAppAdapter {
 }
 
 class SmsAdapter {
-  constructor(apiKey = null) {
-    this.apiKey = apiKey || process.env.SMS_API_KEY;
+  constructor(accountSid = null, authToken = null, fromNumber = null, contentSid = null) {
+    this.accountSid = accountSid || process.env.TWILIO_ACCOUNT_SID;
+    this.authToken = authToken || process.env.TWILIO_AUTH_TOKEN;
+    this.fromNumber = fromNumber || process.env.TWILIO_FROM_NUMBER;
+    const enableCustomContent = process.env.TWILIO_ENABLE_CONTENT === "true";
+    this.contentSid = contentSid || (enableCustomContent ? process.env.TWILIO_CONTENT_SID : null);
+    this.trialTemplate = process.env.TWILIO_TRIAL_TEMPLATE || "sms_customer_support";
   }
   async send(toPhoneNumber, message) {
-    if (!this.apiKey) {
+    if (!this.accountSid || !this.authToken || !this.fromNumber) {
       return { status: "NOT_CONFIGURED", channel: "sms" };
     }
-    // Future SMS gateway implementation
-    return { status: "NOT_CONFIGURED", channel: "sms" };
+    try {
+      const client = twilio(this.accountSid, this.authToken);
+      const messageOptions = {
+        from: this.fromNumber,
+        to: toPhoneNumber,
+        body: this.trialTemplate,
+      };
+
+      // Use the exact Twilio trial pattern that is currently working: body is the configured template name.
+      const result = await client.messages.create(messageOptions);
+      return { status: "SENT", channel: "sms", messageId: result.sid };
+    } catch (err) {
+      return {
+        status: "FAILED",
+        channel: "sms",
+        error: err.message,
+        errorCode: err.code || null,
+      };
+    }
   }
 }
 

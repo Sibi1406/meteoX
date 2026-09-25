@@ -1,8 +1,10 @@
 // App.jsx — MeteoX Application Shell & Responsive Controller
+import { useState } from "react";
 import { Routes, Route, NavLink, Navigate, Link } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useLanguage } from "./i18n/LanguageContext";
+import { api } from "./api";
 import { DISTRICT_COORDINATES } from "./components/LocationSelect";
 import Login from "./components/Login";
 import RoleSelect from "./components/RoleSelect";
@@ -13,6 +15,42 @@ import RoleIcon from "./components/RoleIcon";
 import Home from "./pages/Home";
 import ChatPage from "./pages/ChatPage";
 import Profile from "./pages/Profile";
+
+function DemoAdminRoute({ profile }) {
+  const { t } = useLanguage();
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleTriggerDemoAlert() {
+    setLoading(true);
+    try {
+      const demoRes = await api.triggerDemoAlert({ alertType: "heavy_rain", role: profile?.role || "farmer", language: "en" });
+      setResult(demoRes?.alert || null);
+    } catch (err) {
+      console.error("Demo alert error:", err);
+      setResult({ error: "Unable to trigger demo alert." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="page dashboard-page-wide">
+      <div className="glass-card card-system demo-mode-panel" style={{ maxWidth: 640, margin: "32px auto" }}>
+        <div className="demo-header"><span className="demo-icon">🧪</span><span className="demo-title">Admin Demo Trigger</span></div>
+        <p className="demo-desc">This route is intentionally unlinked from the main app navigation.</p>
+        <button className="btn-secondary demo-trigger-btn" onClick={handleTriggerDemoAlert} disabled={loading}>
+          {loading ? "Triggering..." : "Trigger Simulated Alert"}
+        </button>
+        {result && (
+          <div style={{ marginTop: 18 }}>
+            {result.error ? <p>{result.error}</p> : <pre style={{ whiteSpace: "pre-wrap" }}>{JSON.stringify(result, null, 2)}</pre>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const { user, loading: authLoading, setUser, firebaseConfigMissing } = useAuth();
@@ -137,6 +175,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home profile={profile} />} />
           <Route path="/chat" element={<ChatPage profile={profile} />} />
+          <Route path="/admin/demo" element={<DemoAdminRoute profile={profile} />} />
           <Route
             path="/profile"
             element={<Profile profile={profile} onUpdateProfile={updateProfile} />}

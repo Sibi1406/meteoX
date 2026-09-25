@@ -13,6 +13,7 @@ export default function Home({ profile }) {
   const { language, t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingFeedback, setPendingFeedback] = useState(null);
   const [simulatedAlert, setSimulatedAlert] = useState(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -62,6 +63,21 @@ export default function Home({ profile }) {
       console.error("Demo alert error:", err);
     }
   }
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPendingFeedbackPrompt() {
+      try {
+        const result = await api.getPendingFeedbackPrompt();
+        if (isMounted) setPendingFeedback(result);
+      } catch (err) {
+        console.error("Failed to load pending forecast feedback prompt:", err);
+        if (isMounted) setPendingFeedback(null);
+      }
+    }
+    loadPendingFeedbackPrompt();
+    return () => { isMounted = false; };
+  }, []);
 
   if (loading) {
     return <div className="dashboard-loading-view"><Loading message={t("loadingDashboard")} /></div>;
@@ -139,7 +155,21 @@ export default function Home({ profile }) {
 
           <div className="dashboard-sidebar-col">
             <div className="trust-score-section"><TrustScore trustData={data?.trustScore} clusterName={cluster.displayName || district} /></div>
-            <div className="dashboard-feedback-section"><Feedback forecastId={`home_${cluster.clusterId || district.toLowerCase()}_${tomorrow?.date || "today"}`} lat={lat} lng={lng} role={role} district={district} onCalibrated={(newScore) => setData((previous) => ({ ...previous, trustScore: { ...previous?.trustScore, ...newScore } }))} /></div>
+            {pendingFeedback && (
+              <div className="dashboard-feedback-section">
+                <Feedback
+                  forecastId={pendingFeedback.forecastId}
+                  lat={lat}
+                  lng={lng}
+                  role={role}
+                  district={district}
+                  question={pendingFeedback.predictionSummary}
+                  prompt="How did that forecast hold up?"
+                  onSubmitted={() => setPendingFeedback(null)}
+                  onCalibrated={(newScore) => setData((previous) => ({ ...previous, trustScore: { ...previous?.trustScore, ...newScore } }))}
+                />
+              </div>
+            )}
             <div className="demo-mode-panel glass-card card-system"><div className="demo-header"><span className="demo-icon">🧪</span><span className="demo-title">{t("demoMode")}</span></div><p className="demo-desc">{t("demoModeDesc")}</p><button className="btn-secondary demo-trigger-btn" onClick={handleTriggerDemoAlert}>⚡ {t("simulatedDemoAlert")}</button></div>
           </div>
         </div>

@@ -176,6 +176,20 @@ export const api = {
     }
   },
 
+  async getPendingFeedbackPrompt() {
+    try {
+      await ensureSignedIn();
+      const result = await withTimeout(
+        () => httpsCallable(functions, "getPendingFeedbackPrompt")(),
+        10000,
+        "getPendingFeedbackPrompt timed out"
+      );
+      return result.data || null;
+    } catch (error) {
+      throw callableError("getPendingFeedbackPrompt", error);
+    }
+  },
+
   async createUserProfile(data) {
     try {
       await ensureSignedIn();

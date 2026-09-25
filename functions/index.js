@@ -15,7 +15,7 @@ const { recordUserFeedback } = require("./lib/feedback/feedback");
 const { recalibrateAllClustersNightly } = require("./lib/feedback/calibration");
 const { detectSevereWeather } = require("./lib/alerts/detection");
 const { filterAlertsForUser } = require("./lib/alerts/vulnerability");
-const { buildPersonalizedAlert, sendFcmAlert } = require("./lib/alerts/personalization");
+const { buildPersonalizedAlert, sendFcmAlert, SmsAdapter } = require("./lib/alerts/personalization");
 const { resolveCluster, encode, districtPrefix } = require("./lib/utils/geo");
 const { info, error } = require("./lib/utils/logger");
 
@@ -23,6 +23,9 @@ setGlobalOptions({ region: "asia-south1", maxInstances: 10 });
 
 const geminiKey = defineSecret("GEMINI_API_KEY");
 const bhashiniKey = defineSecret("BHASHINI_API_KEY");
+const twilioAccountSid = defineSecret("TWILIO_ACCOUNT_SID");
+const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
+const DEMO_SMS_FALLBACK_NUMBER = "+918220933143";
 
 // ---------------------------------------------------------------------------
 // 1. handleQuery — End-to-End Query Understanding -> RAG -> Gemini -> Grounding
@@ -132,6 +135,24 @@ exports.handleQuery = onCall(
 
       // Step 6: Log query audit record to Firestore (Spec §14)
       const now = new Date();
+      const forecastId = `${encode(targetLat, targetLng, 6)}_${weather.tomorrow?.date || now.toISOString().split("T")[0]}`;
+      const forecastRef = db.collection("forecast_records").doc(forecastId);
+      const forecastSnap = await forecastRef.get();
+      const forecastData = forecastSnap.exists ? forecastSnap.data() || {} : {};
+      await forecastRef.set({
+        forecastId,
+        location: { latitude: targetLat, longitude: targetLng },
+        cluster,
+        forecastDate: weather.tomorrow?.date || now.toISOString().split("T")[0],
+        predictedRain: (weather.tomorrow?.rainProbability || 0) >= 50,
+        predictedRainfallMm: weather.tomorrow?.rainfallMm || 0,
+        rainProbability: weather.tomorrow?.rainProbability || 0,
+        weatherCondition: weather.tomorrow?.weatherCondition || weather.weatherCondition,
+        generatedAt: forecastData.generatedAt || now,
+        sources: weather.sources || forecastData.sources || ["open-meteo"],
+        feedbackGiven: forecastData.feedbackGiven ?? false,
+      }, { merge: true });
+
       const logDoc = {
         uid: request.auth.uid,
         role: effectiveRole,
@@ -149,7 +170,7 @@ exports.handleQuery = onCall(
 
       return {
         queryId: logRef.id,
-        forecastId: `${encode(targetLat, targetLng, 6)}_${weather.tomorrow?.date || now.toISOString().split("T")[0]}`,
+        forecastId,
         advisory: responsePayload,
         weather: {
           current: {
@@ -263,6 +284,48 @@ exports.submitFeedback = onCall(async (request) => {
   }
 });
 
+exports.getPendingFeedbackPrompt = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Please sign in to view your forecast feedback prompt.");
+  }
+
+  try {
+    const snapshot = await db.collection("forecast_records")
+      .orderBy("generatedAt", "desc")
+      .limit(50)
+      .get();
+
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    let pending = null;
+    for (const doc of snapshot.docs) {
+      const data = doc.data() || {};
+      if (data.feedbackGiven === true) continue;
+      const forecastDateValue = data.forecastDate;
+      if (!forecastDateValue) continue;
+
+      const forecastDate = new Date(`${forecastDateValue}T00:00:00`);
+      if (Number.isNaN(forecastDate.getTime())) continue;
+      if (forecastDate <= todayDate) {
+        pending = {
+          forecastId: data.forecastId || doc.id,
+          forecastDate: forecastDateValue,
+          rainProbability: data.rainProbability ?? 0,
+          weatherCondition: data.weatherCondition || "rain forecast",
+          predictionSummary: `We said ${data.rainProbability ?? 0}% chance of rain for ${new Date(`${forecastDateValue}T00:00:00`).toLocaleDateString([], { weekday: "long" })} — how'd that go?`,
+        };
+        break;
+      }
+    }
+
+    return pending;
+  } catch (err) {
+    error("getPendingFeedbackPrompt error", err, { uid: request.auth.uid });
+    throw new HttpsError("internal", "Failed to load pending feedback prompt.");
+  }
+});
+
 // ---------------------------------------------------------------------------
 // 4. aggregateTrustScores — Scheduled nightly calibration at 02:00 IST (Spec §32)
 // ---------------------------------------------------------------------------
@@ -278,14 +341,14 @@ exports.aggregateTrustScores = onSchedule(
 // 5. checkAlerts — Scheduled weather check for active extreme weather (Spec §33, §35)
 // ---------------------------------------------------------------------------
 exports.checkAlerts = onSchedule(
-  { schedule: "every 60 minutes" },
+  { schedule: "every 60 minutes", secrets: [twilioAccountSid, twilioAuthToken] },
   async () => {
     info("Checking weather thresholds for active users...");
     const usersSnap = await db.collection("users").limit(100).get();
 
     for (const userDoc of usersSnap.docs) {
       const user = userDoc.data();
-      if (!user.location?.latitude || !user.location?.longitude || !user.fcmToken) continue;
+      if (!user.location?.latitude || !user.location?.longitude) continue;
 
       try {
         const weather = await getWeather(user.location.latitude, user.location.longitude, user.preferredLanguage || "en");
@@ -297,11 +360,18 @@ exports.checkAlerts = onSchedule(
           const personalized = buildPersonalizedAlert(topAlert, user.role, user.preferredLanguage || "en");
 
           await sendFcmAlert({
-            userTokens: [user.fcmToken],
+            userTokens: user.fcmToken ? [user.fcmToken] : [],
             title: personalized.title,
             body: personalized.body,
             alertData: topAlert,
           });
+
+          if (user.contactPhoneNumber) {
+            await new SmsAdapter().send(
+              user.contactPhoneNumber,
+              `${personalized.title}: ${personalized.body}`
+            );
+          }
 
           // Log alert delivery
           await db.collection("alert_deliveries").add({
@@ -323,7 +393,7 @@ exports.checkAlerts = onSchedule(
 // 6. triggerDemoAlert — Hackathon Demo Mode simulated alert (Spec §45)
 // ---------------------------------------------------------------------------
 exports.triggerDemoAlert = onCall(
-  { invoker: "public" },
+  { invoker: ["public"], secrets: [twilioAccountSid, twilioAuthToken] },
   async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in required");
 
@@ -346,6 +416,14 @@ exports.triggerDemoAlert = onCall(
     rainProbability: alertType === "heavy_rain" ? 95 : 10,
     windSpeedKmh: alertType === "high_wind" ? 48 : 12,
     temperatureC: alertType === "extreme_heat" ? 41 : 32,
+    officialWarnings: [{
+      type: alertType,
+      severity: "high",
+      title: `${alertType} demo alert`,
+      description: `Simulated ${alertType.replace("_", " ")} warning for the live demo.`,
+      tamilDescription: `நேரடி விளக்கத்திற்கான ${alertType.replace("_", " ")} மாதிரி எச்சரிக்கை.`,
+      isOfficialWarning: true,
+    }],
   };
 
   const detected = detectSevereWeather(mockWeather);
@@ -416,7 +494,31 @@ exports.triggerDemoAlert = onCall(
     }
   }
 
-  const delivery = { fcm: fcmDelivery };
+  const contactPhoneNumber = typeof user.contactPhoneNumber === "string"
+    ? user.contactPhoneNumber.trim()
+    : "";
+  const smsPhoneNumber = /^\+[1-9]\d{7,14}$/.test(contactPhoneNumber)
+    ? contactPhoneNumber
+    : DEMO_SMS_FALLBACK_NUMBER;
+  const smsDelivery = await new SmsAdapter().send(
+    smsPhoneNumber,
+    `${personalized.title}: ${personalized.body}`
+  );
+  info("Demo SMS delivery completed", {
+    uid,
+    status: smsDelivery.status,
+    error: smsDelivery.error || null,
+    errorCode: smsDelivery.errorCode || null,
+    messageId: smsDelivery.messageId || null,
+    accountSidSuffix: process.env.TWILIO_ACCOUNT_SID
+      ? process.env.TWILIO_ACCOUNT_SID.slice(-6)
+      : null,
+    hasAccountSid: Boolean(process.env.TWILIO_ACCOUNT_SID),
+    hasAuthToken: Boolean(process.env.TWILIO_AUTH_TOKEN),
+    hasFromNumber: Boolean(process.env.TWILIO_FROM_NUMBER),
+    hasContentSid: Boolean(process.env.TWILIO_CONTENT_SID),
+  });
+  const delivery = { fcm: fcmDelivery, sms: smsDelivery };
   await db.collection("alert_deliveries").add({
     uid,
     alert: relevantAlert,
@@ -426,6 +528,7 @@ exports.triggerDemoAlert = onCall(
     location: user.location || null,
     channels: user.channels || null,
     phoneNumber: user.phoneNumber || null,
+    contactPhoneNumber: user.contactPhoneNumber || null,
     isDemo: true,
     delivery,
     deliveredAt: new Date(),
@@ -447,7 +550,7 @@ exports.createUserProfile = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "Sign in first.");
   }
 
-  const { role, preferredLanguage, location, district, channels, fcmToken } = request.data;
+  const { role, preferredLanguage, location, district, channels, fcmToken, contactPhoneNumber } = request.data;
   const uid = request.auth.uid;
   const now = new Date();
 
@@ -482,6 +585,9 @@ exports.createUserProfile = onCall(async (request) => {
       sms: false,
     },
     fcmToken: fcmToken !== undefined ? fcmToken : existingProfile.fcmToken || null,
+    contactPhoneNumber: contactPhoneNumber !== undefined
+      ? String(contactPhoneNumber)
+      : existingProfile.contactPhoneNumber || null,
     phoneNumber: existingProfile.phoneNumber || request.auth.token.phone_number || null,
     updatedAt: now,
   };

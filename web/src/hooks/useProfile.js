@@ -100,6 +100,7 @@ export function useProfile(user) {
           district: updated.location?.district,
           channels: updated.channels,
           fcmToken: updated.fcmToken,
+          contactPhoneNumber: updated.contactPhoneNumber,
         });
       } catch (err) {
         console.warn("Could not sync profile to backend:", err);

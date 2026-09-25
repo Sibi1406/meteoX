@@ -1,9 +1,21 @@
 // components/Feedback.jsx — User feedback verification component (Spec §28, §32)
 import { useState } from "react";
+import { doc, setDoc } from "firebase/firestore";
 import { useLanguage } from "../i18n/LanguageContext";
 import { api } from "../api";
+import { db } from "../firebase";
 
-export default function Feedback({ forecastId, lat, lng, role, district, onCalibrated }) {
+export default function Feedback({
+  forecastId,
+  lat,
+  lng,
+  role,
+  district,
+  onCalibrated,
+  onSubmitted,
+  question,
+  prompt,
+}) {
   const { t } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -22,11 +34,16 @@ export default function Feedback({ forecastId, lat, lng, role, district, onCalib
         district: district || "Tirunelveli",
       });
 
+      if (forecastId && db) {
+        await setDoc(doc(db, "forecast_records", forecastId), { feedbackGiven: true }, { merge: true });
+      }
+
       setSubmitted(true);
       if (res?.calibration) {
         setUpdatedScore(res.calibration);
         if (onCalibrated) onCalibrated(res.calibration);
       }
+      if (onSubmitted) onSubmitted();
     } catch (err) {
       console.error("Feedback submission error:", err);
       setSubmitted(true);
@@ -51,13 +68,16 @@ export default function Feedback({ forecastId, lat, lng, role, district, onCalib
     );
   }
 
+  const titleText = question || t("didItRain");
+  const subtitleText = prompt || t("feedbackPrompt");
+
   return (
     <div className="feedback-container glass-card card-system">
       <div className="feedback-header">
         <span className="feedback-icon">📊</span>
-        <span className="feedback-question">{t("didItRain")}</span>
+        <span className="feedback-question">{titleText}</span>
       </div>
-      <p className="feedback-sub">{t("feedbackPrompt")}</p>
+      <p className="feedback-sub">{subtitleText}</p>
 
       <div className="feedback-buttons">
         <button

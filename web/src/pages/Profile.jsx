@@ -19,6 +19,7 @@ export default function Profile({ profile, onUpdateProfile }) {
   const { user, logout } = useAuth();
   const [role, setRole] = useState(profile?.role || "farmer");
   const [location, setLocation] = useState(profile?.location || {});
+  const [contactPhoneNumber, setContactPhoneNumber] = useState(profile?.contactPhoneNumber || "");
   const [savedMessage, setSavedMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -29,6 +30,7 @@ export default function Profile({ profile, onUpdateProfile }) {
       await onUpdateProfile({
         role,
         location,
+        contactPhoneNumber,
       });
       setSavedMessage(t("profileUpdated"));
     } catch (err) {
@@ -87,6 +89,14 @@ export default function Profile({ profile, onUpdateProfile }) {
         {/* Delivery Channels with 'Not yet connected' status (Spec Item 8) */}
         <div className="profile-field-group">
           <label className="group-label">{t("deliveryChannels")}</label>
+          <label htmlFor="contact-phone-number">Phone number for SMS alerts (optional)</label>
+          <input
+            id="contact-phone-number"
+            type="text"
+            value={contactPhoneNumber}
+            onChange={(event) => setContactPhoneNumber(event.target.value)}
+            placeholder="e.g. +919876543210"
+          />
           <div className="channels-list">
             <div className="channel-item active">
               <span>📱 PWA Push Notifications</span>
