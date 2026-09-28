@@ -5,8 +5,12 @@ const { createObservationRecord } = require("./groundTruth");
 const { recalibrateClusterImmediately } = require("./calibration");
 const { info, error } = require("../utils/logger");
 
+function actualRainFromAccuracy(predictedRain, forecastAccurate) {
+  return Boolean(predictedRain) === forecastAccurate;
+}
+
 /**
- * Stores feedback when user answers "Did it rain as predicted? YES / NO" (Spec §28)
+ * Stores observed rain truth from forecast-accuracy feedback or a legacy rain answer.
  */
 async function recordUserFeedback({
   userId,
@@ -15,34 +19,54 @@ async function recordUserFeedback({
   lng,
   forecastDate,
   predictedRain = true,
-  answer, // "yes" or "no"
+  answer,
+  forecastAccurate,
   role = "general",
+  clusterId: suppliedClusterId = null,
+  districtName = null,
+  dbInstance = db,
+  recalibrate = recalibrateClusterImmediately,
 }) {
-  const actualRain = answer.toLowerCase() === "yes";
-  const cluster = resolveCluster(lat, lng);
-  const hash = lat != null && lng != null ? encode(lat, lng, 6) : null;
   const now = new Date();
+  const hasAccuracyAnswer = typeof forecastAccurate === "boolean";
+  const actualRain = hasAccuracyAnswer
+    ? actualRainFromAccuracy(predictedRain, forecastAccurate)
+    : answer.toLowerCase() === "yes";
+  const cluster = suppliedClusterId
+    ? { clusterType: "district", clusterId: suppliedClusterId, displayName: districtName || suppliedClusterId }
+    : resolveCluster(lat, lng, districtName);
+  const hash = lat != null && lng != null ? encode(lat, lng, 6) : null;
+  const targetDate = forecastDate || now.toISOString().split("T")[0];
+  const docId = `${userId}_${cluster.clusterId}_${targetDate}`;
 
   const feedbackDoc = {
-    forecastId: forecastId || `forecast_${cluster.clusterId}_${forecastDate || now.toISOString().split("T")[0]}`,
+    forecastId: forecastId || `forecast_${cluster.clusterId}_${targetDate}`,
     userId,
     location: {
-      latitude: lat,
-      longitude: lng,
+      ...(lat != null ? { latitude: lat } : {}),
+      ...(lng != null ? { longitude: lng } : {}),
     },
     geohash: hash,
     cluster,
-    forecastDate: forecastDate || now.toISOString().split("T")[0],
+    forecastDate: targetDate,
     predictedRain: Boolean(predictedRain),
     actualRain: actualRain,
-    answer: answer.toUpperCase(), // "YES" or "NO"
+    forecastAccurate: actualRain === Boolean(predictedRain),
+    answer: actualRain ? "YES" : "NO",
     role,
     submittedAt: now,
   };
 
   try {
-    // 1. Write feedback document
-    const docRef = await db.collection("feedback").add(feedbackDoc);
+    const docRef = dbInstance.collection("feedback").doc(docId);
+    let previousVote = null;
+
+    // Read and overwrite atomically so repeat votes replace the previous response.
+    await dbInstance.runTransaction(async (transaction) => {
+      const existingSnap = await transaction.get(docRef);
+      previousVote = existingSnap.exists ? existingSnap.data() : null;
+      transaction.set(docRef, feedbackDoc);
+    });
 
     // 2. Also record in weather_observations with ground-truth distinction (Spec §29)
     const observation = createObservationRecord({
@@ -55,21 +79,24 @@ async function recordUserFeedback({
       actualRain,
       isOfficial: false,
     });
-    await db.collection("weather_observations").add(observation);
+    await dbInstance.collection("weather_observations").doc(docId).set(observation);
 
     // 3. Immediate local calibration (Spec §32)
-    const updatedCalibration = await recalibrateClusterImmediately(cluster.clusterId);
+    const updatedCalibration = await recalibrate(cluster.clusterId);
 
     info("Recorded user feedback and ran immediate calibration", {
-      feedbackId: docRef.id,
+      feedbackId: docId,
       clusterId: cluster.clusterId,
       actualRain,
+      isRepeatVote: Boolean(previousVote),
     });
 
     return {
       success: true,
-      feedbackId: docRef.id,
+      feedbackId: docId,
       calibration: updatedCalibration,
+      isRepeatVote: Boolean(previousVote),
+      previousAnswer: previousVote ? previousVote.answer : null,
     };
   } catch (err) {
     error("Failed to record feedback", err, { userId, clusterId: cluster.clusterId });
@@ -77,4 +104,4 @@ async function recordUserFeedback({
   }
 }
 
-module.exports = { recordUserFeedback };
+module.exports = { recordUserFeedback, actualRainFromAccuracy };

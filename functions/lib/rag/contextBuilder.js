@@ -19,6 +19,16 @@ function buildRagContext({
   const forecastDays = dateTime === "forecast_period" || dateTime === "next_week"
     ? (weather.daily || []).slice(0, dateTime === "next_week" ? 7 : 5)
     : [];
+  const localTime = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${date.toLocaleTimeString(language === "ta" ? "ta-IN" : "en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "numeric",
+      minute: "2-digit",
+    })} IST`;
+  };
 
   return {
     userQuery,
@@ -49,6 +59,12 @@ function buildRagContext({
         weatherCondition: targetForecast?.weatherCondition,
       },
       forecastDays,
+      modelAgreement: weather.modelAgreement || null,
+      actionWindows: (weather.actionWindows || []).map((window) => ({
+        ...window,
+        startTimeIST: localTime(window.startISO),
+        endTimeIST: localTime(window.endISO),
+      })),
       sources: weather.sources || ["open-meteo"],
       fromCache: weather.fromCache || false,
     },

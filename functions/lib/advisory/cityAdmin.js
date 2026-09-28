@@ -52,30 +52,40 @@ const CITY_ADMIN_RULES = {
   ],
 };
 
-function getCityAdminAdvisory(weather, lang = "en") {
+function getCityAdminAdvisoryDetailed(weather, lang = "en") {
   const rainfall = weather.tomorrow?.rainfallMm || weather.rainfallMm || 0;
   const rainProb = weather.tomorrow?.rainProbability || weather.rainProbability || 0;
   const temp = weather.temperatureC || 30;
   const wind = weather.tomorrow?.windSpeedKmh || weather.windSpeedKmh || 0;
 
-  const choose = (rule) => {
+  const choose = (rule, ruleId) => {
     const selected = lang === "ta" ? rule.tamilAdvisory : rule.advisory;
     const options = Array.isArray(selected) ? selected : [selected];
-    return options[Math.floor(Math.random() * options.length)];
+    const text = options[Math.floor(Math.random() * options.length)];
+    return {
+      text,
+      ruleId,
+      condition: rule.condition,
+    };
   };
+
   if (rainfall >= 25 && rainProb >= 80) {
-    return choose(CITY_ADMIN_RULES.rules[0]);
+    return choose(CITY_ADMIN_RULES.rules[0], "heavy_waterlogging_pumps");
   }
   if (rainfall >= 5 || rainProb >= 60) {
-    return choose(CITY_ADMIN_RULES.rules[1]);
+    return choose(CITY_ADMIN_RULES.rules[1], "storm_drain_monitoring");
   }
   if (temp >= 39) {
-    return choose(CITY_ADMIN_RULES.rules[2]);
+    return choose(CITY_ADMIN_RULES.rules[2], "extreme_heat_kiosks");
   }
   if (wind >= 35) {
-    return choose(CITY_ADMIN_RULES.rules[3]);
+    return choose(CITY_ADMIN_RULES.rules[3], "strong_wind_hoardings");
   }
-  return choose(CITY_ADMIN_RULES.rules[4]);
+  return choose(CITY_ADMIN_RULES.rules[4], "routine_city_operations");
 }
 
-module.exports = { CITY_ADMIN_RULES, getCityAdminAdvisory };
+function getCityAdminAdvisory(weather, lang = "en") {
+  return getCityAdminAdvisoryDetailed(weather, lang).text;
+}
+
+module.exports = { CITY_ADMIN_RULES, getCityAdminAdvisory, getCityAdminAdvisoryDetailed };

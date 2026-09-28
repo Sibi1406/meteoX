@@ -1,7 +1,7 @@
 // test/alerts.test.js — Unit tests for extreme weather detection and role filtering
 const { describe, it } = require("node:test");
 const assert = require("node:assert");
-const { detectSevereWeather } = require("../lib/alerts/detection");
+const { detectSevereWeather, calculateSeverity } = require("../lib/alerts/detection");
 const { filterAlertsForUser } = require("../lib/alerts/vulnerability");
 const { buildPersonalizedAlert } = require("../lib/alerts/personalization");
 
@@ -53,5 +53,23 @@ describe("Official Weather Alert System", () => {
     const result = buildPersonalizedAlert(alert, "farmer", "ta");
     assert.match(result.title, /கனமழை எச்சரிக்கை/);
     assert.match(result.body, /ஒத்திவைக்கவும்/);
+  });
+});
+
+describe("Weather response severity", () => {
+  it("defaults to normal when forecast values are missing or mild", () => {
+    assert.strictEqual(calculateSeverity({}), "normal");
+    assert.strictEqual(calculateSeverity({ rainfallMm: 1, temperatureC: 24, windSpeedKmh: 10 }), "normal");
+  });
+
+  it("marks existing advisory-level conditions as caution", () => {
+    assert.strictEqual(calculateSeverity({ rainProbability: 60 }), "caution");
+    assert.strictEqual(calculateSeverity({ windSpeedKmh: 25 }), "caution");
+  });
+
+  it("marks configured extreme thresholds as urgent", () => {
+    assert.strictEqual(calculateSeverity({ tomorrow: { rainfallMm: 20, rainProbability: 80 } }), "urgent");
+    assert.strictEqual(calculateSeverity({ windSpeedKmh: 38 }), "urgent");
+    assert.strictEqual(calculateSeverity({ temperatureC: 38 }), "urgent");
   });
 });

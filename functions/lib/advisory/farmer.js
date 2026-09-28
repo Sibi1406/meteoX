@@ -52,29 +52,41 @@ const FARMER_RULES = {
   ],
 };
 
-function getFarmerAdvisory(weather, lang = "en") {
+function getFarmerAdvisoryDetailed(weather, lang = "en") {
   const rainProb = weather.tomorrow?.rainProbability || weather.rainProbability || 0;
   const rainfall = weather.tomorrow?.rainfallMm || weather.rainfallMm || 0;
   const wind = weather.tomorrow?.windSpeedKmh || weather.windSpeedKmh || 0;
   const temp = weather.temperatureC || 30;
 
-  const choose = (rule) => {
+  const choose = (rule, ruleId) => {
     const options = lang === "ta" ? rule.tamilAdvisory : rule.advisory;
-    return (Array.isArray(options) ? options : [options])[Math.floor(Math.random() * (Array.isArray(options) ? options.length : 1))];
+    const text = (Array.isArray(options) ? options : [options])[
+      Math.floor(Math.random() * (Array.isArray(options) ? options.length : 1))
+    ];
+    return {
+      text,
+      ruleId,
+      condition: rule.condition,
+    };
   };
+
   if (rainProb >= 60 || rainfall >= 5) {
-    return choose(FARMER_RULES.rules[0]);
+    return choose(FARMER_RULES.rules[0], "fertilizer_delay_rain");
   }
   if (rainfall >= 15) {
-    return choose(FARMER_RULES.rules[1]);
+    return choose(FARMER_RULES.rules[1], "irrigation_postpone");
   }
   if (wind >= 25) {
-    return choose(FARMER_RULES.rules[2]);
+    return choose(FARMER_RULES.rules[2], "spray_drift_wind");
   }
   if (temp >= 37) {
-    return choose(FARMER_RULES.rules[3]);
+    return choose(FARMER_RULES.rules[3], "heat_stress_irrigation");
   }
-  return choose(FARMER_RULES.rules[4]);
+  return choose(FARMER_RULES.rules[4], "routine_fieldwork");
 }
 
-module.exports = { FARMER_RULES, getFarmerAdvisory };
+function getFarmerAdvisory(weather, lang = "en") {
+  return getFarmerAdvisoryDetailed(weather, lang).text;
+}
+
+module.exports = { FARMER_RULES, getFarmerAdvisory, getFarmerAdvisoryDetailed };

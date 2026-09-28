@@ -1,6 +1,7 @@
 // api.js - Firebase callable API client for MeteoX
 import { httpsCallable } from "firebase/functions";
 import { auth, functions, signInAnonymously } from "./firebase";
+import weatherThresholds from "../../functions/lib/weatherThresholds.json";
 
 /**
  * WMO Weather code interpreter for local display use.
@@ -66,6 +67,75 @@ function callableError(name, error) {
   return surfaced;
 }
 
+function normalizeLegacyFacts(weatherFacts = []) {
+  return weatherFacts.map((fact) => {
+    const text = String(fact || "").trim();
+    const percent = text.match(/(\d+(?:\.\d+)?)\s*%/);
+    const temperature = text.match(/(-?\d+(?:\.\d+)?)\s*°?C/i);
+    const wind = text.match(/(\d+(?:\.\d+)?)\s*(?:km\/h|கிமீ\/மணி)/i);
+    const rainfall = text.match(/(\d+(?:\.\d+)?)\s*(?:mm|மி\.?மீ)/i);
+
+    if (percent) return { icon: "🌧", label: "Rain chance", value: `${percent[1]}%` };
+    if (temperature) return { icon: "🌡", label: "Temperature", value: `${Math.round(Number(temperature[1]))}°C` };
+    if (wind) return { icon: "💨", label: "Wind", value: `${Math.round(Number(wind[1]))} km/h` };
+    if (rainfall) return { icon: "💧", label: "Rainfall", value: `${Math.round(Number(rainfall[1]) * 2) / 2} mm` };
+    return { icon: "🌤", label: "Weather", value: text };
+  }).filter((fact) => fact.value);
+}
+
+function normalizeQueryAdvisory(advisory) {
+  if (!advisory || advisory.headline || advisory.action) {
+    return advisory;
+  }
+
+  const legacyActions = Array.isArray(advisory.advisory) ? advisory.advisory : [advisory.advisory];
+  return {
+    headline: advisory.answer || legacyActions.find(Boolean) || "Weather outlook",
+    facts: normalizeLegacyFacts(advisory.weatherFacts),
+    action: legacyActions.filter(Boolean).join(" "),
+    localTrust: advisory.localTrust || null,
+    severity: "normal",
+  };
+}
+
+function normalizeDashboardResult(result, request) {
+  if (!result || result.advisory?.headline || !result.roleAdvisory) {
+    return result;
+  }
+
+  const isTamil = request?.languageCode === "ta";
+  const weather = result.weather || {};
+  const forecast = weather.tomorrow || weather.today || {};
+  const minimumTemperature = forecast.tempMinC;
+  const maximumTemperature = forecast.tempMaxC ?? weather.temperatureC ?? 30;
+  const temperatureValue = minimumTemperature != null
+    ? `${Math.round(minimumTemperature)}–${Math.round(maximumTemperature)}°C`
+    : `${Math.round(maximumTemperature)}°C`;
+  const facts = [
+    { icon: "🌧", label: isTamil ? "மழை வாய்ப்பு" : "Rain chance", value: `${forecast.rainProbability ?? weather.rainProbability ?? 0}%` },
+    { icon: "🌡", label: isTamil ? "வெப்பநிலை" : "Temperature", value: temperatureValue },
+    { icon: "💨", label: isTamil ? "காற்று" : "Wind", value: `${Math.round(forecast.windSpeedKmh ?? weather.windSpeedKmh ?? 12)} km/h` },
+  ];
+  if (forecast.rainfallMm != null) {
+    facts.push({
+      icon: "💧",
+      label: isTamil ? "மழையளவு" : "Rainfall",
+      value: `${Math.round(forecast.rainfallMm * 2) / 2} mm`,
+    });
+  }
+
+  return {
+    ...result,
+    severity: "normal",
+    advisory: {
+      headline: isTamil ? "இதோ உங்கள் வானிலை முன்னறிவிப்பு." : "Here is your weather outlook.",
+      facts,
+      action: result.roleAdvisory,
+      severity: "normal",
+    },
+  };
+}
+
 async function fetchPublicWeather(lat = 8.7139, lng = 77.7567, languageCode = "en") {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
   url.searchParams.set("latitude", lat);
@@ -73,7 +143,7 @@ async function fetchPublicWeather(lat = 8.7139, lng = 77.7567, languageCode = "e
   url.searchParams.set("timezone", "auto");
   url.searchParams.set("current", "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,cloud_cover");
   url.searchParams.set("hourly", "temperature_2m,precipitation_probability,weather_code");
-  url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,weather_code,uv_index_max");
+  url.searchParams.set("daily", "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,weather_code,uv_index_max,sunrise,sunset");
 
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Open-Meteo HTTP ${response.status}`);
@@ -83,6 +153,14 @@ async function fetchPublicWeather(lat = 8.7139, lng = 77.7567, languageCode = "e
   const daily = raw.daily || {};
   const isTamil = languageCode === "ta";
   const condition = interpretWeatherCode(current.weather_code ?? 0, isTamil);
+  const offsetSeconds = Number(raw.utc_offset_seconds) || 0;
+  const normalizeLocalTime = (value) => {
+    if (!value) return null;
+    const date = new Date(`${value}Z`);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setTime(date.getTime() - offsetSeconds * 1000);
+    return date.toISOString();
+  };
   const dailyForecast = (daily.time || []).map((date, index) => {
     const dayCondition = interpretWeatherCode(daily.weather_code?.[index] ?? 0, isTamil);
     return {
@@ -92,6 +170,10 @@ async function fetchPublicWeather(lat = 8.7139, lng = 77.7567, languageCode = "e
       rainfallMm: daily.precipitation_sum?.[index] ?? 0,
       rainProbability: daily.precipitation_probability_max?.[index] ?? 0,
       windSpeedKmh: daily.wind_speed_10m_max?.[index] ?? null,
+      sunrise: daily.sunrise?.[index] ?? null,
+      sunset: daily.sunset?.[index] ?? null,
+      sunrise: normalizeLocalTime(daily.sunrise?.[index]),
+      sunset: normalizeLocalTime(daily.sunset?.[index]),
       weatherCode: daily.weather_code?.[index] ?? 0,
       weatherCondition: dayCondition.text,
     };
@@ -134,7 +216,10 @@ export const api = {
         60000,
         "handleQuery timed out"
       );
-      return result.data;
+      return {
+        ...result.data,
+        advisory: normalizeQueryAdvisory(result.data?.advisory),
+      };
     } catch (error) {
       throw callableError("handleQuery", error);
     }
@@ -148,15 +233,48 @@ export const api = {
         10000,
         "getWeatherDashboard timed out"
       );
-      return result.data;
+      return normalizeDashboardResult(result.data, data);
     } catch (error) {
       console.warn("Firebase dashboard unavailable; using public weather fallback.", error);
       const weather = await fetchPublicWeather(data?.lat, data?.lng, data?.languageCode);
+      const isTamil = data?.languageCode === "ta";
+      const roleActions = {
+        farmer: isTamil ? "மருந்து அல்லது உரம் இடுவதற்கு முன் வயல் நிலையைப் பாருங்கள்." : "Check field conditions before spraying or fertilizing.",
+        fisherman: isTamil ? "கடலுக்குச் செல்வதற்கு முன் அதிகாரப்பூர்வ கடல் எச்சரிக்கைகளைப் பாருங்கள்." : "Check official marine notices before heading out.",
+        city_admin: isTamil ? "மழை பெய்தால் வடிகால் பகுதிகளைக் கண்காணியுங்கள்." : "Watch drainage points if rain develops.",
+        general: isTamil ? "வெளியில் செல்லும்போது வானிலை மாற்றங்களைக் கவனியுங்கள்." : "Keep an eye on changing conditions when outdoors.",
+      };
+      const forecast = weather.tomorrow || weather.today || {};
+      const minimumTemperature = forecast.tempMinC;
+      const maximumTemperature = forecast.tempMaxC ?? weather.temperatureC ?? 30;
+      const temperatureValue = minimumTemperature != null
+        ? `${Math.round(minimumTemperature)}–${Math.round(maximumTemperature)}°C`
+        : `${Math.round(maximumTemperature)}°C`;
       return {
         weather,
         cluster: data?.cluster || { displayName: data?.district || "Local area" },
-        roleAdvisory: "Live weather data is available. Role-specific guidance will appear when the secure advisory service is connected.",
+        rainDayMm: weatherThresholds.RAIN_DAY_MM,
+        severity: "normal",
+        advisory: {
+          headline: isTamil ? "நேரலை வானிலைத் தரவு கிடைக்கிறது." : "Live weather data is available.",
+          facts: [
+            { icon: "🌧", label: isTamil ? "மழை வாய்ப்பு" : "Rain chance", value: `${forecast.rainProbability ?? weather.rainProbability ?? 0}%` },
+            { icon: "🌡", label: isTamil ? "வெப்பநிலை" : "Temperature", value: temperatureValue },
+            { icon: "💨", label: isTamil ? "காற்று" : "Wind", value: `${Math.round(forecast.windSpeedKmh ?? weather.windSpeedKmh ?? 12)} km/h` },
+            ...(forecast.rainfallMm != null ? [{
+              icon: "💧",
+              label: isTamil ? "மழையளவு" : "Rainfall",
+              value: `${Math.round(forecast.rainfallMm * 2) / 2} mm`,
+            }] : []),
+          ],
+          action: roleActions[data?.role] || roleActions.general,
+          severity: "normal",
+        },
         trustScore: null,
+        trackRecord: null,
+        drift: null,
+        actionWindows: [],
+        evidence: null,
         alerts: [],
       };
     }
@@ -176,11 +294,11 @@ export const api = {
     }
   },
 
-  async getPendingFeedbackPrompt() {
+  async getPendingFeedbackPrompt(data = {}) {
     try {
       await ensureSignedIn();
       const result = await withTimeout(
-        () => httpsCallable(functions, "getPendingFeedbackPrompt")(),
+        () => httpsCallable(functions, "getPendingFeedbackPrompt")(data),
         10000,
         "getPendingFeedbackPrompt timed out"
       );

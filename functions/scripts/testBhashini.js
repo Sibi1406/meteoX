@@ -1,8 +1,7 @@
 const path = require("node:path");
-const dotenv = require("dotenv");
 const axios = require("axios");
 
-dotenv.config({ path: path.join(__dirname, "..", ".env") });
+process.loadEnvFile(path.join(__dirname, "..", ".env"));
 
 const endpoint = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline";
 const payload = {

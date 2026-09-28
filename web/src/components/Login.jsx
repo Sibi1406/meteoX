@@ -5,6 +5,7 @@ import { auth } from "../firebase";
 import { useAuth } from "../hooks/useAuth";
 import { useLanguage } from "../i18n/LanguageContext";
 import LanguageSelect from "./LanguageSelect";
+import { IsobarContours } from "./IsobarIntro";
 
 export default function Login({ onLoggedIn }) {
   const { t } = useLanguage();
@@ -19,6 +20,25 @@ export default function Login({ onLoggedIn }) {
   const [busy, setBusy] = useState(false);
   const recaptchaRef = useRef(null);
   const authCardRef = useRef(null);
+  const landingRef = useRef(null);
+
+  function handleLandingPointerMove(event) {
+    if (event.pointerType !== "mouse" || window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)").matches) return;
+    const bounds = landingRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+    landingRef.current.querySelectorAll(".landing-parallax-layer").forEach((layer) => {
+      const depth = Number(layer.dataset.depth) || 1;
+      layer.style.transform = `translate3d(${x * depth}px, ${y * depth}px, 0)`;
+    });
+  }
+
+  function handleLandingPointerLeave() {
+    landingRef.current?.querySelectorAll(".landing-parallax-layer").forEach((layer) => {
+      layer.style.transform = "translate3d(0, 0, 0)";
+    });
+  }
 
   function ensureRecaptcha() {
     if (!recaptchaRef.current) {
@@ -92,19 +112,19 @@ export default function Login({ onLoggedIn }) {
   }
 
   return (
-    <div className="landing-page-container">
+    <div className="landing-page-container" ref={landingRef} onPointerMove={handleLandingPointerMove} onPointerLeave={handleLandingPointerLeave}>
       {/* Background Animated Weather Blobs & Gradients */}
       <div className="landing-ambient-bg" aria-hidden="true">
         <div className="blob blob-1"></div>
         <div className="blob blob-2"></div>
-        <div className="blob blob-3"></div>
       </div>
 
-      {/* Floating Weather Particle Accents */}
-      <div className="weather-particle p-cloud-1">☁️</div>
-      <div className="weather-particle p-sun-1">☀️</div>
-      <div className="weather-particle p-rain-1">🌧️</div>
-      <div className="weather-particle p-sprout-1">🌱</div>
+      <div className="landing-atmosphere" aria-hidden="true">
+        <div className="landing-parallax-layer cirrus-streaks" data-depth="-12" />
+        <div className="landing-parallax-layer cumulus-layer" data-depth="8" />
+        <div className="landing-parallax-layer foreground-haze" data-depth="16" />
+      </div>
+      <IsobarContours className="landing-isobars" />
 
       {/* Top Bar with Brand & Language Switcher */}
       <header className="landing-top-bar">
@@ -238,19 +258,19 @@ export default function Login({ onLoggedIn }) {
                   <button className="btn-google" onClick={handleGoogleLogin} disabled={busy}>
                     <svg className="google-icon" viewBox="0 0 24 24">
                       <path
-                        fill="#4285F4"
+                        fill="var(--google-blue)"
                         d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
                       />
                       <path
-                        fill="#34A853"
+                        fill="var(--google-green)"
                         d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.24 21.28 7.33 24 12 24z"
                       />
                       <path
-                        fill="#FBBC05"
+                        fill="var(--google-yellow)"
                         d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.94 0 12s.46 3.84 1.26 5.42l4.02-3.15z"
                       />
                       <path
-                        fill="#EA4335"
+                        fill="var(--google-red)"
                         d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.24 2.72 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                       />
                     </svg>

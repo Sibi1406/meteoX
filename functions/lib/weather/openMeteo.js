@@ -1,5 +1,6 @@
 // weather/openMeteo.js — Open-Meteo API Client (Spec §11)
 const axios = require("axios");
+const { MODELS } = require("../config");
 
 // WMO Weather Interpretation Codes (WW)
 const WMO_CODE_MAP = {
@@ -52,6 +53,11 @@ async function fetchOpenMeteo(lat, lng) {
       "temperature_2m",
       "precipitation_probability",
       "weather_code",
+      "precipitation",
+      "wind_speed_10m",
+      "wind_gusts_10m",
+      "relative_humidity_2m",
+      "apparent_temperature",
     ].join(","),
     daily: [
       "temperature_2m_max",
@@ -60,6 +66,8 @@ async function fetchOpenMeteo(lat, lng) {
       "precipitation_probability_max",
       "wind_speed_10m_max",
       "weather_code",
+      "sunrise",
+      "sunset",
     ].join(","),
     timezone: "auto",
   };
@@ -68,8 +76,46 @@ async function fetchOpenMeteo(lat, lng) {
   return response.data;
 }
 
+/**
+ * Fetches 3-day multi-model forecast votes (ECMWF, GFS, ICON).
+ * Kept separate from fetchOpenMeteo so failures degrade gracefully.
+ */
+async function fetchModelVotes(lat, lng) {
+  const url = "https://api.open-meteo.com/v1/forecast";
+  const params = {
+    latitude: lat,
+    longitude: lng,
+    daily: [
+      "precipitation_sum",
+      "precipitation_probability_max",
+    ].join(","),
+    models: MODELS.join(","),
+    forecast_days: 3,
+    timezone: "Asia/Kolkata",
+  };
+
+  const response = await axios.get(url, { params, timeout: 8000 });
+  return response.data;
+}
+
+async function fetchSnapshotForecast(lat, lng) {
+  const response = await axios.get("https://api.open-meteo.com/v1/forecast", {
+    params: {
+      latitude: lat,
+      longitude: lng,
+      daily: "precipitation_sum,precipitation_probability_max",
+      forecast_days: 3,
+      timezone: "Asia/Kolkata",
+    },
+    timeout: 8000,
+  });
+  return response.data;
+}
+
 module.exports = {
   fetchOpenMeteo,
+  fetchModelVotes,
+  fetchSnapshotForecast,
   getWeatherCondition,
   WMO_CODE_MAP,
 };

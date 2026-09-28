@@ -34,22 +34,32 @@ const FISHERMAN_RULES = {
   ],
 };
 
-function getFishermanAdvisory(weather, lang = "en") {
+function getFishermanAdvisoryDetailed(weather, lang = "en") {
   const wind = weather.tomorrow?.windSpeedKmh || weather.windSpeedKmh || 0;
   const rainProb = weather.tomorrow?.rainProbability || weather.rainProbability || 0;
 
-  const choose = (rule) => {
+  const choose = (rule, ruleId) => {
     const selected = lang === "ta" ? rule.tamilAdvisory : rule.advisory;
     const options = Array.isArray(selected) ? selected : [selected];
-    return options[Math.floor(Math.random() * options.length)];
+    const text = options[Math.floor(Math.random() * options.length)];
+    return {
+      text,
+      ruleId,
+      condition: rule.condition,
+    };
   };
+
   if (wind >= 38) {
-    return choose(FISHERMAN_RULES.rules[0]);
+    return choose(FISHERMAN_RULES.rules[0], "rough_sea_wind");
   }
   if (rainProb >= 75) {
-    return choose(FISHERMAN_RULES.rules[1]);
+    return choose(FISHERMAN_RULES.rules[1], "squalls_rain");
   }
-  return choose(FISHERMAN_RULES.rules[2]);
+  return choose(FISHERMAN_RULES.rules[2], "calm_sea_routine");
 }
 
-module.exports = { FISHERMAN_RULES, getFishermanAdvisory };
+function getFishermanAdvisory(weather, lang = "en") {
+  return getFishermanAdvisoryDetailed(weather, lang).text;
+}
+
+module.exports = { FISHERMAN_RULES, getFishermanAdvisory, getFishermanAdvisoryDetailed };

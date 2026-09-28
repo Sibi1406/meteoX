@@ -6,7 +6,7 @@ const { resolveCluster } = require("../utils/geo");
  * Normalizes raw Open-Meteo data into internal standardized weather schema (Spec §12).
  * Uses null for unavailable fields. Never invents values.
  */
-function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
+function normalizeOpenMeteo(raw, lat, lng, lang = "en", modelAgreement = null) {
   const current = raw.current || {};
   const daily = raw.daily || {};
   const hourly = raw.hourly || {};
@@ -19,13 +19,31 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
   const tempMins = daily.temperature_2m_min || [];
   const windMaxs = daily.wind_speed_10m_max || [];
   const codes = daily.weather_code || [];
+  const sunrises = daily.sunrise || [];
+  const sunsets = daily.sunset || [];
+  const offsetSeconds = Number(raw.utc_offset_seconds) || 0;
+  const asUtcIso = (time) => {
+    if (typeof time !== "string") return null;
+    const zoned = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(time);
+    const parsed = new Date(zoned ? time : `${time}Z`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    if (!zoned) parsed.setTime(parsed.getTime() - offsetSeconds * 1000);
+    return parsed.toISOString();
+  };
+
   const hourlyForecast = (hourly.time || []).map((time, idx) => ({
-    time,
+    time: asUtcIso(time),
+    localTime: time,
     temperatureC: hourly.temperature_2m?.[idx] != null ? Number(hourly.temperature_2m[idx]) : null,
     rainProbability: hourly.precipitation_probability?.[idx] != null
       ? Number(hourly.precipitation_probability[idx])
       : null,
     weatherCode: hourly.weather_code?.[idx] ?? null,
+    rainMm: hourly.precipitation?.[idx] != null ? Number(hourly.precipitation[idx]) : null,
+    windKmh: hourly.wind_speed_10m?.[idx] != null ? Number(hourly.wind_speed_10m[idx]) : null,
+    gustKmh: hourly.wind_gusts_10m?.[idx] != null ? Number(hourly.wind_gusts_10m[idx]) : null,
+    humidityPercent: hourly.relative_humidity_2m?.[idx] != null ? Number(hourly.relative_humidity_2m[idx]) : null,
+    apparentC: hourly.apparent_temperature?.[idx] != null ? Number(hourly.apparent_temperature[idx]) : null,
   }));
 
   // Build daily forecast list
@@ -36,6 +54,8 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
     tempMaxC: tempMaxs[idx] != null ? Number(tempMaxs[idx]) : null,
     tempMinC: tempMins[idx] != null ? Number(tempMins[idx]) : null,
     windSpeedKmh: windMaxs[idx] != null ? Number(windMaxs[idx]) : null,
+    sunrise: asUtcIso(sunrises[idx]),
+    sunset: asUtcIso(sunsets[idx]),
     weatherCondition: getWeatherCondition(codes[idx], lang),
     weatherCode: codes[idx],
   }));
@@ -46,14 +66,17 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
   const currentConditionCode = current.weather_code != null ? current.weather_code : (codes[0] || 0);
 
   return {
+    schemaVersion: 2,
     location: {
       latitude: lat,
       longitude: lng,
       cluster,
     },
-    timestamp: current.time || new Date().toISOString(),
+    timestamp: asUtcIso(current.time),
     temperatureC: current.temperature_2m != null ? Number(current.temperature_2m) : (todayForecast.tempMaxC || null),
     apparentTemperatureC: current.apparent_temperature != null ? Number(current.apparent_temperature) : null,
+    sunrise: todayForecast.sunrise ?? null,
+    sunset: todayForecast.sunset ?? null,
     rainfallMm: current.precipitation != null ? Number(current.precipitation) : (todayForecast.rainfallMm || 0),
     rainProbability: todayForecast.rainProbability != null ? Number(todayForecast.rainProbability) : (current.precipitation > 0 ? 90 : 10),
     humidityPercent: current.relative_humidity_2m != null ? Number(current.relative_humidity_2m) : null,
@@ -66,6 +89,7 @@ function normalizeOpenMeteo(raw, lat, lng, lang = "en") {
       end: times[times.length - 1] || new Date().toISOString().split("T")[0],
     },
     sources: ["open-meteo"],
+    modelAgreement: modelAgreement || null,
     today: todayForecast,
     tomorrow: tomorrowForecast,
     daily: dailyForecasts,

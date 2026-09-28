@@ -1,7 +1,7 @@
 // weather/cache.js — Firestore Weather Cache with TTL (Spec §9, §10, §15)
 const { db } = require("../../admin");
 const { encode } = require("../utils/geo");
-const { CACHE_TTL_MINUTES } = require("../config");
+const { CACHE_TTL_MINUTES, PREDICT_RAIN_PROB } = require("../config");
 const { error, info } = require("../utils/logger");
 
 /**
@@ -70,7 +70,7 @@ async function setCachedWeather(lat, lng, normalizedWeather) {
           location: { latitude: lat, longitude: lng },
           cluster: normalizedWeather.location.cluster,
           forecastDate: tomorrow.date,
-          predictedRain: (tomorrow.rainProbability || 0) >= 50,
+          predictedRain: (tomorrow.rainProbability || 0) >= PREDICT_RAIN_PROB,
           predictedRainfallMm: tomorrow.rainfallMm || 0,
           rainProbability: tomorrow.rainProbability || 0,
           weatherCondition: tomorrow.weatherCondition,

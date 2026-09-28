@@ -14,42 +14,27 @@ function getGeminiClient() {
   return new GoogleGenAI({ apiKey });
 }
 
+function isQuotaError(error) {
+  return error?.status === 429 ||
+    error?.status === "RESOURCE_EXHAUSTED" ||
+    /quota|rate limit|resource_exhausted|too many requests/i.test(error?.message || "");
+}
+
 /**
  * Calls Gemini with the given prompt and returns the raw text response.
  * In @google/genai, response.text is a property rather than a method.
  */
-async function generateAdvisoryText(prompt, maxAttempts = 3) {
-  let lastError;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const ai = getGeminiClient();
-      const response = await ai.models.generateContent({
-        model: MODEL_NAME,
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
-        },
-      });
-      return response.text;
-    } catch (error) {
-      lastError = error;
-      const isQuotaError =
-        error?.status === 429 ||
-        error?.status === "RESOURCE_EXHAUSTED" ||
-        /quota|rate limit|resource_exhausted|too many requests/i.test(error?.message || "");
-
-      if (!isQuotaError || attempt === maxAttempts) {
-        throw error;
-      }
-
-      const delayMs = 2000 * attempt;
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
-
-  throw lastError;
+async function generateAdvisoryText(prompt) {
+  const ai = getGeminiClient();
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      temperature: 0.75,
+    },
+  });
+  return response.text;
 }
 
 // System prompt strictly matching Spec §20
@@ -91,5 +76,6 @@ Never contradict official emergency warnings.
 
 module.exports = {
   generateAdvisoryText,
+  isQuotaError,
   GEMINI_SYSTEM_PROMPT,
 };

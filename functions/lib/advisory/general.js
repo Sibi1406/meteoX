@@ -43,27 +43,37 @@ const GENERAL_RULES = {
   ],
 };
 
-function getGeneralAdvisory(weather, lang = "en") {
+function getGeneralAdvisoryDetailed(weather, lang = "en") {
   const rainProb = weather.tomorrow?.rainProbability || weather.rainProbability || 0;
   const rainfall = weather.tomorrow?.rainfallMm || weather.rainfallMm || 0;
   const temp = weather.temperatureC || 30;
   const wind = weather.tomorrow?.windSpeedKmh || weather.windSpeedKmh || 0;
 
-  const choose = (rule) => {
+  const choose = (rule, ruleId) => {
     const selected = lang === "ta" ? rule.tamilAdvisory : rule.advisory;
     const options = Array.isArray(selected) ? selected : [selected];
-    return options[Math.floor(Math.random() * options.length)];
+    const text = options[Math.floor(Math.random() * options.length)];
+    return {
+      text,
+      ruleId,
+      condition: rule.condition,
+    };
   };
+
   if (rainProb >= 70 || rainfall >= 10) {
-    return choose(GENERAL_RULES.rules[0]);
+    return choose(GENERAL_RULES.rules[0], "umbrella_rain_protection");
   }
   if (temp >= 38) {
-    return choose(GENERAL_RULES.rules[1]);
+    return choose(GENERAL_RULES.rules[1], "high_heat_hydration");
   }
   if (wind >= 35) {
-    return choose(GENERAL_RULES.rules[2]);
+    return choose(GENERAL_RULES.rules[2], "strong_wind_travel_caution");
   }
-  return choose(GENERAL_RULES.rules[3]);
+  return choose(GENERAL_RULES.rules[3], "favorable_weather_routine");
 }
 
-module.exports = { GENERAL_RULES, getGeneralAdvisory };
+function getGeneralAdvisory(weather, lang = "en") {
+  return getGeneralAdvisoryDetailed(weather, lang).text;
+}
+
+module.exports = { GENERAL_RULES, getGeneralAdvisory, getGeneralAdvisoryDetailed };

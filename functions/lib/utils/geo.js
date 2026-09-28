@@ -16,7 +16,6 @@ const KNOWN_DISTRICTS = {
   tirunelveli: { name: "Tirunelveli", lat: 8.7139, lng: 77.7567, state: "Tamil Nadu", country: "India" },
   trichy: { name: "Tiruchirappalli", lat: 10.7905, lng: 78.7047, state: "Tamil Nadu", country: "India" },
   nilgiris: { name: "The Nilgiris", lat: 11.4102, lng: 76.6950, state: "Tamil Nadu", country: "India" },
-  cuddalore: { name: "Cuddalore", lat: 11.7480, lng: 79.7714, state: "Tamil Nadu", country: "India" },
   kanyakumari: { name: "Kanyakumari", lat: 8.0883, lng: 77.5385, state: "Tamil Nadu", country: "India" },
   vellore: { name: "Vellore", lat: 12.9165, lng: 79.1325, state: "Tamil Nadu", country: "India" },
   erode: { name: "Erode", lat: 11.3410, lng: 77.7172, state: "Tamil Nadu", country: "India" },
@@ -111,9 +110,19 @@ function resolveCluster(lat, lng, districtName = null) {
   };
 }
 
+function listDistricts() {
+  return Object.entries(KNOWN_DISTRICTS).map(([clusterId, info]) => ({
+    clusterId,
+    name: info.name,
+    lat: info.lat,
+    lng: info.lng,
+  }));
+}
+
 module.exports = {
   encode,
   districtPrefix,
   resolveCluster,
   KNOWN_DISTRICTS,
+  listDistricts,
 };

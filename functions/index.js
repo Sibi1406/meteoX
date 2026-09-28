@@ -1,4 +1,4 @@
-// index.js — Cloud Functions entry point for WeatherGPT (Node.js 20)
+// index.js — Cloud Functions entry point for WeatherGPT (Node.js 22)
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { setGlobalOptions } = require("firebase-functions/v2");
@@ -10,14 +10,20 @@ const { processQuery } = require("./lib/query/queryProcessor");
 const { retrieveStructuredData } = require("./lib/rag/retrieval");
 const { buildRagContext } = require("./lib/rag/contextBuilder");
 const { generateAdvisoryWithGrounding } = require("./lib/ai/advisory");
-const { evaluateRoleAdvisory } = require("./lib/advisory/roleRules");
-const { recordUserFeedback } = require("./lib/feedback/feedback");
+const { evaluateRoleAdvisory, evaluateRoleAdvisoryDetailed } = require("./lib/advisory/roleRules");
+const { computeActionWindows } = require("./lib/advisory/actionWindows");
+const { computeDrift } = require("./lib/weather/drift");
+const { buildEvidence } = require("./lib/weather/evidenceBuilder");
+const { recordUserFeedback, actualRainFromAccuracy } = require("./lib/feedback/feedback");
 const { recalibrateAllClustersNightly } = require("./lib/feedback/calibration");
-const { detectSevereWeather } = require("./lib/alerts/detection");
+const { derivePredictedRain, updateFarmerVoteOnTrack } = require("./lib/feedback/trackRecord");
+const { runSnapshotForecasts, runVerifyForecasts, getISTDateString } = require("./lib/feedback/schedulerJobs");
+const { detectSevereWeather, calculateSeverity } = require("./lib/alerts/detection");
 const { filterAlertsForUser } = require("./lib/alerts/vulnerability");
 const { buildPersonalizedAlert, sendFcmAlert, SmsAdapter } = require("./lib/alerts/personalization");
-const { resolveCluster, encode, districtPrefix } = require("./lib/utils/geo");
-const { info, error } = require("./lib/utils/logger");
+const { resolveCluster, encode, districtPrefix, listDistricts } = require("./lib/utils/geo");
+const { info, warn, error } = require("./lib/utils/logger");
+const { RAIN_DAY_MM, PREDICT_RAIN_PROB } = require("./lib/config");
 
 setGlobalOptions({ region: "asia-south1", maxInstances: 10 });
 
@@ -26,6 +32,66 @@ const bhashiniKey = defineSecret("BHASHINI_API_KEY");
 const twilioAccountSid = defineSecret("TWILIO_ACCOUNT_SID");
 const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
 const DEMO_SMS_FALLBACK_NUMBER = "+918220933143";
+
+function buildWeatherFacts(weather, forecast, isTamil) {
+  const minimumTemperature = forecast?.tempMinC;
+  const maximumTemperature = forecast?.tempMaxC ?? weather?.temperatureC ?? 30;
+  const temperatureValue = minimumTemperature != null
+    ? `${Math.round(minimumTemperature)}–${Math.round(maximumTemperature)}°C`
+    : `${Math.round(maximumTemperature)}°C`;
+  const facts = [
+    {
+      icon: "🌧",
+      label: isTamil ? "மழை வாய்ப்பு" : "Rain chance",
+      value: `${forecast?.rainProbability ?? weather?.rainProbability ?? 0}%`,
+    },
+    {
+      icon: "🌡",
+      label: isTamil ? "வெப்பநிலை" : "Temperature",
+      value: temperatureValue,
+    },
+    {
+      icon: "💨",
+      label: isTamil ? "காற்று" : "Wind",
+      value: `${Math.round(forecast?.windSpeedKmh ?? weather?.windSpeedKmh ?? 12)} km/h`,
+    },
+  ];
+
+  const rainfallMm = forecast?.rainfallMm ?? weather?.rainfallMm;
+  if (rainfallMm != null) {
+    facts.push({
+      icon: "💧",
+      label: isTamil ? "மழையளவு" : "Rainfall",
+      value: `${Math.round(rainfallMm * 2) / 2} mm`,
+    });
+  }
+  return facts;
+}
+
+function buildFactualAction(intent, role, isTamil) {
+  const actions = {
+    temperature: {
+      farmer: ["Plan fieldwork for cooler hours if it feels hot.", "வெயிலாக இருந்தால் வயல் பணிகளை குளிர்ச்சியான நேரத்தில் செய்யுங்கள்."],
+      fisherman: ["Take water and shade breaks during shore work.", "கரையோரப் பணிகளில் தண்ணீர் குடித்து நிழலில் ஓய்வெடுங்கள்."],
+      city_admin: ["Keep water available for people working outdoors.", "வெளியில் பணிபுரிபவர்களுக்கு தண்ணீர் கிடைப்பதை உறுதிசெய்யுங்கள்."],
+      general: ["Take shade and water breaks if you are outdoors.", "வெளியில் இருந்தால் நிழலில் ஓய்வெடுத்து தண்ணீர் குடியுங்கள்."],
+    },
+    rainfall: {
+      farmer: ["Check field conditions before deciding when to spray.", "மருந்து தெளிக்கும் நேரத்தை முடிவு செய்வதற்கு முன் வயல் நிலையைப் பாருங்கள்."],
+      fisherman: ["Check official marine notices before heading out.", "கடலுக்குச் செல்வதற்கு முன் அதிகாரப்பூர்வ கடல் எச்சரிக்கைகளைப் பாருங்கள்."],
+      city_admin: ["Watch drainage points if rain develops.", "மழை பெய்தால் வடிகால் பகுதிகளைக் கண்காணியுங்கள்."],
+      general: ["Keep rain protection handy if you will be outdoors.", "வெளியில் செல்லும்போது மழைப் பாதுகாப்பை எடுத்துச் செல்லுங்கள்."],
+    },
+    wind: {
+      farmer: ["Wait for calmer conditions before spraying.", "காற்று தணிந்த பிறகு மருந்து தெளியுங்கள்."],
+      fisherman: ["Check official marine notices before heading out.", "கடலுக்குச் செல்வதற்கு முன் அதிகாரப்பூர்வ கடல் எச்சரிக்கைகளைப் பாருங்கள்."],
+      city_admin: ["Check loose outdoor signs if winds pick up.", "காற்று அதிகரித்தால் தளர்வான வெளிப்புறப் பலகைகளைச் சரிபாருங்கள்."],
+      general: ["Take care around trees and loose items outdoors.", "வெளியில் மரங்கள் மற்றும் தளர்வான பொருட்கள் அருகே கவனமாக இருங்கள்."],
+    },
+  };
+  const roleActions = actions[intent] || actions.rainfall;
+  return (roleActions[role] || roleActions.general)[isTamil ? 1 : 0];
+}
 
 // ---------------------------------------------------------------------------
 // 1. handleQuery — End-to-End Query Understanding -> RAG -> Gemini -> Grounding
@@ -70,6 +136,23 @@ exports.handleQuery = onCall(
 
       const cluster = weather.location?.cluster || resolveCluster(targetLat, targetLng);
 
+      // Step 3b: Compute role action windows (Spec §Section 4)
+      const actionWindows = computeActionWindows({
+        hourly: weather.hourly,
+        role: effectiveRole,
+        now: new Date(),
+      });
+      weather.actionWindows = actionWindows;
+
+      const detailedRule = evaluateRoleAdvisoryDetailed(effectiveRole, weather, language);
+      const evidence = buildEvidence({
+        weather,
+        role: effectiveRole,
+        detailedRule,
+        trackRecord: rawTrust?.trackRecord || null,
+        actionWindows,
+      });
+
       // Step 4: Direct factual response optimization (Spec §41)
       // If query is a simple factual check (e.g. "What is the temperature tomorrow?"),
       // answer directly without invoking Gemini LLM.
@@ -78,32 +161,15 @@ exports.handleQuery = onCall(
       if (queryAnalysis.isFactualOnly) {
         const isTamil = language === "ta";
         const targetForecast = queryAnalysis.dateTime === "today" ? weather.today : weather.tomorrow;
-        let directAnswer = "";
-
-        if (queryAnalysis.intent === "temperature") {
-          const t = targetForecast.tempMaxC || weather.temperatureC;
-          directAnswer = isTamil
-            ? `நாளை எதிர்பார்க்கப்படும் அதிகபட்ச வெப்பநிலை ${t}°C.`
-            : `The forecast maximum temperature for tomorrow is ${t}°C.`;
-        } else if (queryAnalysis.intent === "rainfall") {
-          const r = targetForecast.rainProbability;
-          directAnswer = isTamil
-            ? `நாளை மழை பெய்வதற்கான வாய்ப்பு ${r}%.`
-            : `The rain probability for tomorrow is ${r}%.`;
-        } else if (queryAnalysis.intent === "wind") {
-          const w = targetForecast.windSpeedKmh;
-          directAnswer = isTamil
-            ? `நாளை காற்றின் வேகம் மணிக்கு சுமார் ${w} கி.மீ.`
-            : `The forecast wind speed for tomorrow is approximately ${w} km/h.`;
-        }
-
+        const directHeadlines = {
+          temperature: isTamil ? "இதோ நீங்கள் கேட்ட வெப்பநிலை முன்னறிவிப்பு." : "Here is the temperature outlook you asked for.",
+          rainfall: isTamil ? "இதோ நீங்கள் கேட்ட மழை முன்னறிவிப்பு." : "Here is the rain outlook you asked for.",
+          wind: isTamil ? "இதோ நீங்கள் கேட்ட காற்று முன்னறிவிப்பு." : "Here is the wind outlook you asked for.",
+        };
         responsePayload = {
-          weatherFacts: [
-            isTamil ? `மழை வாய்ப்பு: ${targetForecast.rainProbability}%` : `Rain probability: ${targetForecast.rainProbability}%`,
-            isTamil ? `வெப்பநிலை: ${targetForecast.tempMaxC}°C` : `Temperature: ${targetForecast.tempMaxC}°C`,
-            isTamil ? `காற்றின் வேகம்: ${targetForecast.windSpeedKmh} km/h` : `Wind speed: ${targetForecast.windSpeedKmh} km/h`,
-          ],
-          advisory: [evaluateRoleAdvisory(effectiveRole, weather, language)],
+          headline: directHeadlines[queryAnalysis.intent],
+          facts: buildWeatherFacts(weather, targetForecast, isTamil),
+          action: buildFactualAction(queryAnalysis.intent, effectiveRole, isTamil),
           localTrust: localTrust
             ? {
                 trustScore: `${Math.round((localTrust.trustScore || 0.8) * 100)}%`,
@@ -111,7 +177,6 @@ exports.handleQuery = onCall(
                 confidenceLevel: localTrust.confidenceLevel,
               }
             : null,
-          answer: directAnswer,
           isDirectFactual: true,
         };
       } else {
@@ -133,6 +198,8 @@ exports.handleQuery = onCall(
         });
       }
 
+      responsePayload = { ...responsePayload, severity: calculateSeverity(weather) };
+
       // Step 6: Log query audit record to Firestore (Spec §14)
       const now = new Date();
       const forecastId = `${encode(targetLat, targetLng, 6)}_${weather.tomorrow?.date || now.toISOString().split("T")[0]}`;
@@ -144,7 +211,7 @@ exports.handleQuery = onCall(
         location: { latitude: targetLat, longitude: targetLng },
         cluster,
         forecastDate: weather.tomorrow?.date || now.toISOString().split("T")[0],
-        predictedRain: (weather.tomorrow?.rainProbability || 0) >= 50,
+        predictedRain: (weather.tomorrow?.rainProbability || 0) >= PREDICT_RAIN_PROB,
         predictedRainfallMm: weather.tomorrow?.rainfallMm || 0,
         rainProbability: weather.tomorrow?.rainProbability || 0,
         weatherCondition: weather.tomorrow?.weatherCondition || weather.weatherCondition,
@@ -162,6 +229,7 @@ exports.handleQuery = onCall(
         location: { latitude: targetLat, longitude: targetLng, cluster },
         weatherCondition: weather.weatherCondition,
         advisory: responsePayload,
+        evidence,
         fromCache: weather.fromCache || false,
         createdAt: now,
       };
@@ -172,6 +240,8 @@ exports.handleQuery = onCall(
         queryId: logRef.id,
         forecastId,
         advisory: responsePayload,
+        evidence,
+        rainDayMm: RAIN_DAY_MM,
         weather: {
           current: {
             temperatureC: weather.temperatureC,
@@ -184,6 +254,8 @@ exports.handleQuery = onCall(
           tomorrow: weather.tomorrow,
           cluster,
           sources: weather.sources,
+          modelAgreement: weather.modelAgreement || null,
+          actionWindows,
           fromCache: weather.fromCache,
           cacheFreshness: weather.cacheFreshness,
         },
@@ -223,13 +295,59 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
     const severeAlerts = detectSevereWeather(weather);
     const relevantAlerts = filterAlertsForUser(severeAlerts, effectiveRole);
 
-    // Get deterministic agricultural / role advisory
-    const roleAdvisory = evaluateRoleAdvisory(effectiveRole, weather, lang);
+    // Compute role action windows (Spec Section 4)
+    const actionWindows = computeActionWindows({
+      hourly: weather.hourly,
+      role: effectiveRole,
+      now: new Date(),
+    });
+    weather.actionWindows = actionWindows;
+
+    // Read tomorrow's forecast track doc to compute drift (Spec Section 3)
+    const tomorrowStr = getISTDateString(1);
+    let drift = null;
+    try {
+      const tomorrowTrackDoc = await db.collection("forecast_tracks").doc(`${cluster.clusterId}_${tomorrowStr}`).get();
+      if (tomorrowTrackDoc.exists) {
+        drift = computeDrift(tomorrowTrackDoc.data()?.history, new Date());
+      }
+    } catch (driftErr) {
+      warn("Failed to compute forecast drift", { error: driftErr.message });
+    }
+
+    const trackRecord = trustData?.trackRecord || null;
+
+    // Get deterministic agricultural / role advisory with rule tracking
+    const detailedRule = evaluateRoleAdvisoryDetailed(effectiveRole, weather, lang);
+    const roleAdvisory = detailedRule.text;
+    const severity = calculateSeverity(weather);
+    const isTamil = lang === "ta";
+    const severityHeadlines = {
+      urgent: isTamil ? "கடுமையான வானிலை குறித்து கூடுதல் கவனம் தேவை." : "Take extra care with the severe weather ahead.",
+      caution: isTamil ? "மாறும் வானிலையை கவனித்துத் திட்டமிடுங்கள்." : "Keep an eye on changing conditions as you plan.",
+      normal: isTamil ? "வழக்கமான திட்டங்களைத் தொடர வானிலை சாதகமாக உள்ளது." : "Conditions look manageable for your usual plans.",
+    };
+    const dashboardAdvisory = {
+      headline: severityHeadlines[severity],
+      facts: buildWeatherFacts(weather, weather.tomorrow || weather.today, isTamil),
+      action: roleAdvisory,
+      severity,
+    };
+
+    // Deterministic evidence payload (Spec Section 5)
+    const evidence = buildEvidence({
+      weather,
+      role: effectiveRole,
+      detailedRule,
+      trackRecord,
+      actionWindows,
+    });
 
     return {
       weather,
       cluster,
-      roleAdvisory,
+      severity,
+      advisory: dashboardAdvisory,
       trustScore: trustData
         ? {
             accuracyScore: trustData.accuracyScore,
@@ -237,9 +355,14 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
             sampleCount: trustData.sampleCount || trustData.totalFeedback || 0,
             confidenceLevel: trustData.confidenceLevel || "low",
             regionalBias: trustData.regionalBias || 0,
-            isDemo: Boolean(trustData.isDemo),
+            isDemo: Boolean(trustData.isDemo || trustData.trackRecord?.isDemo),
           }
         : null,
+      trackRecord,
+      drift,
+      actionWindows,
+      evidence,
+      rainDayMm: RAIN_DAY_MM,
       alerts: relevantAlerts,
     };
   } catch (err) {
@@ -256,30 +379,68 @@ exports.submitFeedback = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "Please sign in to submit feedback.");
   }
 
-  const { forecastId, answer, predictedRain, lat, lng, role, forecastDate } = request.data;
-  if (!answer || lat == null || lng == null) {
-    throw new HttpsError("invalid-argument", "Missing answer (YES/NO) or location coordinates.");
+  const { clusterId: clientClusterId, forecastDate, answer, forecastAccurate, lat, lng, role, district } = request.data || {};
+  const hasAccuracyAnswer = typeof forecastAccurate === "boolean";
+  const legacyAnswer = String(answer || "").toLowerCase();
+  if ((!hasAccuracyAnswer && !["yes", "no"].includes(legacyAnswer)) || (lat == null && !clientClusterId)) {
+    throw new HttpsError("invalid-argument", "Missing forecast accuracy answer or location coordinates.");
   }
 
   try {
+    const cluster = clientClusterId
+      ? { clusterId: clientClusterId, displayName: district || clientClusterId }
+      : resolveCluster(lat, lng, district);
+    const targetClusterId = cluster.clusterId;
+    const targetDate = forecastDate || getISTDateString(-1);
+
+    // Derive predictedRain server-side from stored forecast (Section 0a, Section 2)
+    const trackRef = db.collection("forecast_tracks").doc(`${targetClusterId}_${targetDate}`);
+    const trackSnap = await trackRef.get();
+    const derivedPredictedRain = derivePredictedRain(
+      trackSnap.exists ? trackSnap.data() : null,
+      targetDate
+    );
+    if (derivedPredictedRain == null) {
+      throw new HttpsError("failed-precondition", "No stored forecast is available for this district and date.");
+    }
+
+    const actualRain = hasAccuracyAnswer
+      ? actualRainFromAccuracy(derivedPredictedRain, forecastAccurate)
+      : legacyAnswer === "yes";
+    const actualRainAnswer = actualRain ? "yes" : "no";
+
     const result = await recordUserFeedback({
       userId: request.auth.uid,
-      forecastId,
+      forecastId: `${targetClusterId}_${targetDate}`,
       lat,
       lng,
-      forecastDate,
-      predictedRain: predictedRain != null ? predictedRain : true,
-      answer, // "yes" or "no"
+      forecastDate: targetDate,
+      predictedRain: derivedPredictedRain,
+      answer: actualRainAnswer,
+      ...(hasAccuracyAnswer ? { forecastAccurate } : {}),
       role: role || "general",
+      clusterId: targetClusterId,
+      districtName: cluster.displayName,
+    });
+
+    // Transactionally update farmer counts in forecast_tracks and recalculate trackRecord if verified
+    await updateFarmerVoteOnTrack({
+      clusterId: targetClusterId,
+      targetDate,
+      answer: actualRainAnswer,
+      isRepeatVote: result.isRepeatVote,
+      previousAnswer: result.previousAnswer,
     });
 
     return {
       success: true,
+      feedbackGiven: true,
       message: "Feedback recorded and local calibration updated.",
       calibration: result.calibration,
     };
   } catch (err) {
     error("submitFeedback error", err, { uid: request.auth.uid });
+    if (err instanceof HttpsError) throw err;
     throw new HttpsError("internal", "Failed to submit feedback.");
   }
 });
@@ -289,37 +450,54 @@ exports.getPendingFeedbackPrompt = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "Please sign in to view your forecast feedback prompt.");
   }
 
+  const uid = request.auth.uid;
+  let targetClusterId = request.data?.clusterId;
+  let language = request.data?.languageCode;
+
   try {
-    const snapshot = await db.collection("forecast_records")
-      .orderBy("generatedAt", "desc")
-      .limit(50)
-      .get();
-
-    const today = new Date();
-    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-    let pending = null;
-    for (const doc of snapshot.docs) {
-      const data = doc.data() || {};
-      if (data.feedbackGiven === true) continue;
-      const forecastDateValue = data.forecastDate;
-      if (!forecastDateValue) continue;
-
-      const forecastDate = new Date(`${forecastDateValue}T00:00:00`);
-      if (Number.isNaN(forecastDate.getTime())) continue;
-      if (forecastDate <= todayDate) {
-        pending = {
-          forecastId: data.forecastId || doc.id,
-          forecastDate: forecastDateValue,
-          rainProbability: data.rainProbability ?? 0,
-          weatherCondition: data.weatherCondition || "rain forecast",
-          predictionSummary: `We said ${data.rainProbability ?? 0}% chance of rain for ${new Date(`${forecastDateValue}T00:00:00`).toLocaleDateString([], { weekday: "long" })} — how'd that go?`,
-        };
-        break;
-      }
+    if (!targetClusterId || !language) {
+      const userDoc = await db.collection("users").doc(uid).get();
+      const userProfile = userDoc.exists ? userDoc.data() : null;
+      targetClusterId = targetClusterId || userProfile?.location?.cluster?.clusterId || "tirunelveli";
+      language = language || userProfile?.preferredLanguage || "en";
     }
 
-    return pending;
+    const yesterdayStr = getISTDateString(-1);
+    const trackDocRef = db.collection("forecast_tracks").doc(`${targetClusterId}_${yesterdayStr}`);
+    const trackSnap = await trackDocRef.get();
+
+    if (!trackSnap.exists) return null;
+    const trackData = trackSnap.data() || {};
+    if (trackData.final?.predictedRain == null || trackData.final?.rainProbability == null) return null;
+
+    // Return prompt only if this uid has not already voted on this date
+    const feedbackDocRef = db.collection("feedback").doc(`${uid}_${targetClusterId}_${yesterdayStr}`);
+    const feedbackSnap = await feedbackDocRef.get();
+    if (feedbackSnap.exists) return null;
+
+    const rainProb = trackData.final.rainProbability ?? 0;
+    const isTamil = language === "ta";
+    const dayName = new Date(`${yesterdayStr}T00:00:00+05:30`).toLocaleDateString(isTamil ? "ta-IN" : "en-US", {
+      weekday: "long",
+      timeZone: "Asia/Kolkata",
+    });
+    const prediction = trackData.final.predictedRain
+      ? isTamil ? "மழை" : "rain"
+      : isTamil ? "வறண்ட வானிலை" : "dry weather";
+    const predictionSummary = isTamil
+      ? `${trackData.districtName || targetClusterId} பகுதியில் ${dayName} அன்று ${rainProb}% மழை வாய்ப்புடன் ${prediction} என்று கணித்தோம். அந்த முன்னறிவிப்பு சரியாக இருந்ததா?`
+      : `We predicted ${prediction} for ${dayName} in ${trackData.districtName || targetClusterId} with a ${rainProb}% chance of rain. Was that forecast accurate?`;
+
+    return {
+      forecastId: `${targetClusterId}_${yesterdayStr}`,
+      clusterId: targetClusterId,
+      forecastDate: yesterdayStr,
+      rainProbability: rainProb,
+      weatherCondition: isTamil
+        ? trackData.final.predictedRain ? "மழை முன்னறிவிப்பு" : "வறண்ட வானிலை முன்னறிவிப்பு"
+        : trackData.final.predictedRain ? "rain forecast" : "dry forecast",
+      predictionSummary,
+    };
   } catch (err) {
     error("getPendingFeedbackPrompt error", err, { uid: request.auth.uid });
     throw new HttpsError("internal", "Failed to load pending feedback prompt.");
@@ -334,6 +512,25 @@ exports.aggregateTrustScores = onSchedule(
   async () => {
     info("Starting nightly trust score aggregation job...");
     await recalibrateAllClustersNightly();
+  }
+);
+
+// ---------------------------------------------------------------------------
+// 4b. snapshotForecasts & verifyForecasts — Scheduled Self-Grading Engine (Spec Section 2)
+// ---------------------------------------------------------------------------
+exports.snapshotForecasts = onSchedule(
+  { schedule: "30 0,6,12,18 * * *", timeZone: "Asia/Kolkata" },
+  async () => {
+    info("Starting scheduled snapshotForecasts job...");
+    await runSnapshotForecasts();
+  }
+);
+
+exports.verifyForecasts = onSchedule(
+  { schedule: "every day 06:00", timeZone: "Asia/Kolkata" },
+  async () => {
+    info("Starting scheduled verifyForecasts job...");
+    await runVerifyForecasts();
   }
 );
 

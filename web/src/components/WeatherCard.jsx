@@ -1,5 +1,6 @@
 // components/WeatherCard.jsx — Displays verified weather facts with source transparency (Spec §26, §43)
 import { useLanguage } from "../i18n/LanguageContext";
+import { tempColor } from "../utils/weatherColors";
 
 export default function WeatherCard({ weather, title = null }) {
   const { t } = useLanguage();
@@ -22,7 +23,7 @@ export default function WeatherCard({ weather, title = null }) {
       </div>
 
       <div className="weather-main-row">
-        <div className="temp-large">{temp}</div>
+        <div className="temp-large" style={{ color: tempColor(weather.temperatureC) }}>{temp}</div>
         <div className="condition-text">{weather.weatherCondition || "Clear sky"}</div>
       </div>
 

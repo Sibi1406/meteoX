@@ -109,16 +109,17 @@ export default function Chat({ profile }) {
           queryId: data.queryId,
           forecastId: data.forecastId,
           advisory: data.advisory,
+          evidence: data.evidence || null,
           weather: data.weather,
           localTrust: data.localTrust,
-          text: data.advisory?.answer,
+          text: data.advisory?.headline,
         },
       ]);
 
       if (fromVoice) {
-        const answer = data.advisory?.answer || "";
-        const advisories = data.advisory?.advisory || [];
-        handleSpeak([answer, ...advisories].filter(Boolean).join(". "));
+        const advisory = data.advisory || {};
+        const spokenFacts = (advisory.facts || []).map((fact) => `${fact.label}: ${fact.value}`);
+        handleSpeak([advisory.headline, ...spokenFacts, advisory.action].filter(Boolean).join(". "));
       }
     } catch (err) {
       setMessages((prev) => [
@@ -280,11 +281,10 @@ export default function Chat({ profile }) {
         {busy && (
           <div className="chat-row bot">
             <div className="bubble bot thinking-bubble">
-              <svg className="kolam-loader" viewBox="0 0 60 20" role="img" aria-label={t("thinking")}>
-                <circle className="kolam-loader-dot dot-one" cx="10" cy="10" r="3.5" />
-                <circle className="kolam-loader-dot dot-two" cx="30" cy="10" r="3.5" />
-                <circle className="kolam-loader-dot dot-three" cx="50" cy="10" r="3.5" />
-              </svg>
+              <div className="isobar-loader chat-loader" aria-hidden="true">
+                <span className="isobar-loader-ring" />
+                <span className="isobar-loader-ring inner" />
+              </div>
               <span>{t("thinking")}</span>
             </div>
           </div>

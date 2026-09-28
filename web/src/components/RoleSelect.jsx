@@ -4,6 +4,7 @@ import { useLanguage } from "../i18n/LanguageContext";
 import LocationSelect from "./LocationSelect";
 import LanguageSelect from "./LanguageSelect";
 import RoleIcon from "./RoleIcon";
+import useTilt from "../hooks/useTilt";
 
 const ROLES = [
   { id: "farmer", labelKey: "farmer", descKey: "farmerDesc" },
@@ -15,6 +16,7 @@ const ROLES = [
 
 export default function RoleSelect({ initialProfile, onDone }) {
   const { t } = useLanguage();
+  const roleGridRef = useTilt(".role-option-card", 5);
   const [role, setRole] = useState(initialProfile?.role || "farmer");
   const [location, setLocation] = useState(
     initialProfile?.location || {
@@ -61,7 +63,7 @@ export default function RoleSelect({ initialProfile, onDone }) {
       </div>
 
       {/* Role Cards Grid with duotone icons and clear selected state */}
-      <div className="role-grid">
+      <div className="role-grid" ref={roleGridRef}>
         {ROLES.map((r) => {
           const isSelected = role === r.id;
           return (

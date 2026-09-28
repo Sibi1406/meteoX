@@ -1,6 +1,6 @@
 // App.jsx — MeteoX Application Shell & Responsive Controller
-import { useState } from "react";
-import { Routes, Route, NavLink, Navigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route, NavLink, Navigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useLanguage } from "./i18n/LanguageContext";
@@ -15,6 +15,7 @@ import RoleIcon from "./components/RoleIcon";
 import Home from "./pages/Home";
 import ChatPage from "./pages/ChatPage";
 import Profile from "./pages/Profile";
+import { applyStoredSkyPhase } from "./utils/skyPhase";
 
 function DemoAdminRoute({ profile }) {
   const { t } = useLanguage();
@@ -56,6 +57,20 @@ export default function App() {
   const { user, loading: authLoading, setUser, firebaseConfigMissing } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile(user);
   const { t } = useLanguage();
+  const isChatRoute = useLocation().pathname === "/chat";
+
+  useEffect(() => {
+    const syncSkyPhase = () => applyStoredSkyPhase(new Date());
+    syncSkyPhase();
+    const timer = window.setInterval(syncSkyPhase, 60000);
+    window.addEventListener("focus", syncSkyPhase);
+    document.addEventListener("visibilitychange", syncSkyPhase);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", syncSkyPhase);
+      document.removeEventListener("visibilitychange", syncSkyPhase);
+    };
+  }, []);
 
   if (authLoading || (user && profileLoading)) {
     return (
@@ -108,7 +123,7 @@ export default function App() {
 
   // 3. Main Application with Fluid Responsive Shell
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isChatRoute ? "chat-app-shell" : ""}`}>
       {/* Responsive Top Application Bar */}
       <header className="topbar glass-card card-system">
         <div className="topbar-inner">
@@ -171,7 +186,7 @@ export default function App() {
       </header>
 
       {/* Main Page View Router */}
-      <main className="page-container">
+      <main className={`page-container ${isChatRoute ? "chat-page-container" : ""}`}>
         <Routes>
           <Route path="/" element={<Home profile={profile} />} />
           <Route path="/chat" element={<ChatPage profile={profile} />} />

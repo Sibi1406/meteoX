@@ -1,9 +1,9 @@
 // advisory/roleRules.js — Role Rules Retrieval and Dispatcher (Spec §18)
 const { db } = require("../../admin");
-const { FARMER_RULES, getFarmerAdvisory } = require("./farmer");
-const { FISHERMAN_RULES, getFishermanAdvisory } = require("./fisherman");
-const { CITY_ADMIN_RULES, getCityAdminAdvisory } = require("./cityAdmin");
-const { GENERAL_RULES, getGeneralAdvisory } = require("./general");
+const { FARMER_RULES, getFarmerAdvisory, getFarmerAdvisoryDetailed } = require("./farmer");
+const { FISHERMAN_RULES, getFishermanAdvisory, getFishermanAdvisoryDetailed } = require("./fisherman");
+const { CITY_ADMIN_RULES, getCityAdminAdvisory, getCityAdminAdvisoryDetailed } = require("./cityAdmin");
+const { GENERAL_RULES, getGeneralAdvisory, getGeneralAdvisoryDetailed } = require("./general");
 const { info, error } = require("../utils/logger");
 
 const DEFAULTS_BY_ROLE = {
@@ -39,25 +39,33 @@ async function getRoleRules(role) {
 }
 
 /**
- * Computes deterministic role-based rule advisory from weather facts.
+ * Computes deterministic role-based rule advisory and structured rule metadata.
  */
-function evaluateRoleAdvisory(role, weather, lang = "en") {
+function evaluateRoleAdvisoryDetailed(role, weather, lang = "en") {
   switch (role) {
     case "farmer":
-      return getFarmerAdvisory(weather, lang);
+      return getFarmerAdvisoryDetailed(weather, lang);
     case "fisherman":
-      return getFishermanAdvisory(weather, lang);
+      return getFishermanAdvisoryDetailed(weather, lang);
     case "city_admin":
-      return getCityAdminAdvisory(weather, lang);
+      return getCityAdminAdvisoryDetailed(weather, lang);
     case "general":
     case "researcher":
     default:
-      return getGeneralAdvisory(weather, lang);
+      return getGeneralAdvisoryDetailed(weather, lang);
   }
+}
+
+/**
+ * Computes deterministic role-based rule advisory string from weather facts.
+ */
+function evaluateRoleAdvisory(role, weather, lang = "en") {
+  return evaluateRoleAdvisoryDetailed(role, weather, lang).text;
 }
 
 module.exports = {
   getRoleRules,
   evaluateRoleAdvisory,
+  evaluateRoleAdvisoryDetailed,
   DEFAULTS_BY_ROLE,
 };

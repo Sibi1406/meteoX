@@ -55,8 +55,15 @@ describe("Weather Validation & Normalization", () => {
         weather_code: 61,
         wind_speed_10m: 16.2,
       },
+      utc_offset_seconds: 19800,
+      hourly: {
+        time: ["2026-09-11T06:00"],
+        temperature_2m: [25],
+      },
       daily: {
         time: ["2026-09-11", "2026-09-12"],
+        sunrise: ["2026-09-11T06:10", "2026-09-12T06:09"],
+        sunset: ["2026-09-11T18:20", "2026-09-12T18:20"],
         temperature_2m_max: [31.0, 30.5],
         temperature_2m_min: [24.0, 23.8],
         precipitation_sum: [2.5, 12.0],
@@ -73,5 +80,10 @@ describe("Weather Validation & Normalization", () => {
     assert.strictEqual(normalized.tomorrow.rainProbability, 85);
     assert.strictEqual(normalized.tomorrow.rainfallMm, 12.0);
     assert.strictEqual(normalized.location.cluster.clusterId, "coimbatore");
+    assert.strictEqual(normalized.timestamp, "2026-09-11T06:30:00.000Z");
+    assert.strictEqual(normalized.hourly[0].time, "2026-09-11T00:30:00.000Z");
+    assert.strictEqual(normalized.hourly[0].localTime, "2026-09-11T06:00");
+    assert.strictEqual(normalized.sunrise, "2026-09-11T00:40:00.000Z");
+    assert.strictEqual(normalized.sunset, "2026-09-11T12:50:00.000Z");
   });
 });
