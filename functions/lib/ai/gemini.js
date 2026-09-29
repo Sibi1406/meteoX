@@ -3,6 +3,7 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const MODEL_NAME = "gemini-3.6-flash";
+const GEMINI_REQUEST_TIMEOUT_MS = 12000;
 
 function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -11,13 +12,28 @@ function getGeminiClient() {
       "GEMINI_API_KEY is not set. Please set the secret or environment variable."
     );
   }
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      timeout: GEMINI_REQUEST_TIMEOUT_MS,
+      retryOptions: { attempts: 1 },
+    },
+  });
 }
 
 function isQuotaError(error) {
   return error?.status === 429 ||
     error?.status === "RESOURCE_EXHAUSTED" ||
     /quota|rate limit|resource_exhausted|too many requests/i.test(error?.message || "");
+}
+
+function isTimeoutError(error) {
+  const message = error?.message || "";
+  return error?.name === "TimeoutError" ||
+    error?.code === "ETIMEDOUT" ||
+    error?.status === 504 ||
+    error?.status === "DEADLINE_EXCEEDED" ||
+    /deadline[_\s-]+(?:expired|exceeded)|timed?\s*out|timeout/i.test(message);
 }
 
 /**
@@ -77,5 +93,6 @@ Never contradict official emergency warnings.
 module.exports = {
   generateAdvisoryText,
   isQuotaError,
+  isTimeoutError,
   GEMINI_SYSTEM_PROMPT,
 };

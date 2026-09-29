@@ -1,7 +1,7 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const { buildFallbackHeadline, buildPrompt } = require("../lib/ai/advisory");
-const { isQuotaError } = require("../lib/ai/gemini");
+const { buildFallbackHeadline, buildFallbackAction, buildPrompt } = require("../lib/ai/advisory");
+const { isQuotaError, isTimeoutError } = require("../lib/ai/gemini");
 
 describe("Gemini advisory resilience", () => {
   it("recognizes quota exhaustion without classifying unrelated errors", () => {
@@ -9,6 +9,13 @@ describe("Gemini advisory resilience", () => {
     assert.strictEqual(isQuotaError({ status: "RESOURCE_EXHAUSTED" }), true);
     assert.strictEqual(isQuotaError(new Error("Gemini rate limit exceeded")), true);
     assert.strictEqual(isQuotaError({ status: 503, message: "Service unavailable" }), false);
+  });
+
+  it("recognizes Gemini request timeouts for immediate fallback", () => {
+    assert.strictEqual(isTimeoutError(new Error("request timed out")), true);
+    assert.strictEqual(isTimeoutError({ code: "ETIMEDOUT" }), true);
+    assert.strictEqual(isTimeoutError({ status: 504, message: "Deadline expired before operation could complete." }), true);
+    assert.strictEqual(isTimeoutError(new Error("invalid JSON")), false);
   });
 
   it("varies fallback headlines while keeping rain likelihood consistent", () => {
@@ -22,6 +29,46 @@ describe("Gemini advisory resilience", () => {
 
     assert.strictEqual(new Set(headlines).size, 3);
     assert.ok(headlines.every((headline) => /rain/i.test(headline)));
+  });
+
+  it("keeps fertilizer fallback advice specific to application timing", () => {
+    const context = {
+      language: "en",
+      role: "farmer",
+      weather: { targetForecast: { rainProbability: 16, rainfallMm: 0, windSpeedKmh: 25 } },
+    };
+    const headline = buildFallbackHeadline({
+      query: "Check fertilizer timing",
+      context,
+      targetForecast: context.weather.targetForecast,
+      isTamil: false,
+      variationIndex: 0,
+    });
+    const action = buildFallbackAction({
+      query: "Check fertilizer timing",
+      context,
+      targetForecast: context.weather.targetForecast,
+      isTamil: false,
+      deterministicAdvisory: "Generic fieldwork advice.",
+    });
+
+    assert.match(headline, /fertilizer/i);
+    assert.match(action, /16%/);
+    assert.match(action, /fertilizer application/i);
+    assert.doesNotMatch(action, /Generic fieldwork advice/);
+  });
+
+  it("recommends delaying fertilizer application when rain risk is high", () => {
+    const context = { weather: { targetForecast: { rainProbability: 80, rainfallMm: 8 } } };
+    const action = buildFallbackAction({
+      query: "Can I apply fertilizer tomorrow?",
+      context,
+      targetForecast: context.weather.targetForecast,
+      isTamil: false,
+      deterministicAdvisory: "Generic fieldwork advice.",
+    });
+
+    assert.match(action, /postpone fertilizer application/i);
   });
 
   it("varies Tamil fallback headlines for dry forecasts", () => {
@@ -57,5 +104,16 @@ describe("Gemini advisory resilience", () => {
     assert.ok(prompt.includes("illustrative options, not a template"));
     assert.ok(prompt.includes("[context-supported probability]"));
     assert.ok(prompt.includes(`${naturalVariation}\nRespond ONLY with valid JSON`));
+  });
+
+  it("instructs Gemini to answer fertilizer timing questions directly", () => {
+    const prompt = buildPrompt("Check fertilizer timing", {
+      language: "en",
+      role: "farmer",
+      weather: {},
+    }, null, 0);
+
+    assert.match(prompt, /specifically about applying fertilizer/i);
+    assert.match(prompt, /do not substitute generic fieldwork advice/i);
   });
 });

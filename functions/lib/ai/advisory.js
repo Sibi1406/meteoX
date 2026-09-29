@@ -1,5 +1,5 @@
 // ai/advisory.js — Grounded Advisory Generator with Auto-Regeneration (Spec §20, §21, §22)
-const { generateAdvisoryText, isQuotaError, GEMINI_SYSTEM_PROMPT } = require("./gemini");
+const { generateAdvisoryText, isQuotaError, isTimeoutError, GEMINI_SYSTEM_PROMPT } = require("./gemini");
 const { verifyGrounding } = require("./grounding");
 const { MAX_REGENERATIONS } = require("../config");
 const { evaluateRoleAdvisory } = require("../advisory/roleRules");
@@ -11,12 +11,21 @@ const RESPONSE_FRAMES = [
   "Lead with the role-specific action or caution.",
 ];
 
+function isFertilizerQuestion(query) {
+  return /fertili[sz]|manure|உரம்|உரமிட/.test(String(query || "").toLowerCase());
+}
+
 /**
  * Builds user prompt containing the full RAG context and instructions to respond in English or Tamil.
  */
 function buildPrompt(userQuery, context, feedbackNotes = null, variationIndex = Math.floor(Math.random() * RESPONSE_FRAMES.length)) {
   const isTamil = context.language === "ta";
   const responseFrame = RESPONSE_FRAMES[Math.abs(variationIndex) % RESPONSE_FRAMES.length];
+  const questionSpecificGuidance = isFertilizerQuestion(userQuery)
+    ? isTamil
+      ? "இந்தக் கேள்வி உரமிடும் நேரத்தைப் பற்றியது. பொதுவான வயல் வேலை ஆலோசனை வழங்காமல், முன்னறிவிப்பு மழை வாய்ப்பு மற்றும் மழையளவை வைத்து உரமிடும் நேரத்துக்கே நேரடியாகப் பதிலளிக்கவும். பயிர் அல்லது மண் விவரங்கள் இல்லையெனில், தயாரிப்பு லேபிள் மற்றும் உள்ளூர் வேளாண் வழிகாட்டுதலைப் பின்பற்றச் சொல்லவும்."
+      : "The user is asking about fertilizer timing. Answer specifically about applying fertilizer using the forecast rain probability and rainfall; do not substitute generic fieldwork advice. If crop or soil details are unavailable, say to follow the product label and local agronomic guidance."
+    : "";
 
   return `
 ${GEMINI_SYSTEM_PROMPT}
@@ -37,6 +46,7 @@ ${
 RESPONSE FRAME FOR THIS REPLY: ${responseFrame} Do not copy this instruction into the response.
 
 Match the user's actual question scope — do not add advice for conditions they didn't ask about unless directly relevant.
+${questionSpecificGuidance}
 Phrase the windows in CONTEXT; do not invent windows or times.
 Write action in plain spoken language, as if a knowledgeable local person is talking to them, not a formal report — avoid words like "initiate", "ensure", "verify", "broadcasting".
 headline and action must NOT repeat each other or restate the facts array — each field has a distinct job.
@@ -68,6 +78,7 @@ Respond ONLY with valid JSON matching EXACTLY this structure (no markdown fences
 function buildFallbackHeadline({ query, context, targetForecast, isTamil, variationIndex = Math.floor(Math.random() * 3) }) {
   const lowerQuery = String(query || "").toLowerCase();
   const rainChance = targetForecast?.rainProbability ?? context.weather?.rainProbability ?? 0;
+  const rainfall = targetForecast?.rainfallMm ?? context.weather?.rainfallMm ?? 0;
   const temp = targetForecast?.temperatureMaxC ?? context.weather?.temperatureC ?? 30;
   const wind = targetForecast?.windSpeedKmh ?? context.weather?.windSpeedKmh ?? 12;
   const choose = (english, tamil) => {
@@ -87,15 +98,27 @@ function buildFallbackHeadline({ query, context, targetForecast, isTamil, variat
         );
   }
 
-  if (lowerQuery.includes("fertilizer") || lowerQuery.includes("உரம்") || lowerQuery.includes("spray") || lowerQuery.includes("pesticide")) {
-    return rainChance >= 60
+  if (isFertilizerQuestion(lowerQuery)) {
+    return rainChance >= 60 || rainfall >= 5
       ? choose(
-          ["Rain could affect fieldwork.", "Plan field spraying around the expected rain.", "Upcoming rain may interrupt fieldwork."],
-          ["மழை வயல் பணிகளைப் பாதிக்கலாம்.", "எதிர்பார்க்கப்படும் மழைக்கு ஏற்ப தெளிப்புப் பணிகளைத் திட்டமிடுங்கள்.", "வரவிருக்கும் மழை வயல் பணிகளுக்கு இடையூறாக இருக்கலாம்."]
+          ["Rain may wash away fertilizer applied today.", "Postpone fertilizer application until after the expected rain.", "Expected rain could reduce the benefit of fertilizer applied now."],
+          ["இன்று இடும் உரத்தை மழை அடித்துச் செல்லலாம்.", "எதிர்பார்க்கப்படும் மழை நின்ற பிறகு உரமிடுங்கள்.", "இப்போது உரமிட்டால் எதிர்பார்க்கப்படும் மழையால் அதன் பயன் குறையலாம்."]
         )
       : choose(
-          ["Conditions look more suitable for fieldwork.", "Rain is less likely to interrupt fieldwork.", "Fieldwork is less likely to be disrupted by rain."],
-          ["வயல் பணிகளுக்கு வானிலை சாதகமாகத் தெரிகிறது.", "மழை வயல் பணிகளுக்கு இடையூறாக இருக்க வாய்ப்பு குறைவு.", "மழையால் வயல் பணிகள் பாதிக்கப்பட வாய்ப்பு குறைவாக உள்ளது."]
+          ["Rain is less likely to interfere with fertilizer application during this forecast period.", "The forecast shows a lower rain risk for applying fertilizer.", "Rain is less likely to wash away fertilizer during the forecast period."],
+          ["முன்னறிவிப்பு காலத்தில் உரமிடுவதை மழை பாதிக்க வாய்ப்பு குறைவு.", "உரமிடுவதற்கான மழை அபாயம் குறைவாக இருப்பதாக முன்னறிவிப்பு காட்டுகிறது.", "முன்னறிவிப்பு காலத்தில் உரத்தை மழை அடித்துச் செல்ல வாய்ப்பு குறைவு."]
+        );
+  }
+
+  if (lowerQuery.includes("spray") || lowerQuery.includes("pesticide") || lowerQuery.includes("தெளி")) {
+    return rainChance >= 60 || rainfall >= 5
+      ? choose(
+          ["Rain may wash away a treatment sprayed today.", "Postpone spraying until after the expected rain.", "Expected rain could reduce the benefit of spraying now."],
+          ["இன்று தெளிக்கும் மருந்தை மழை அடித்துச் செல்லலாம்.", "எதிர்பார்க்கப்படும் மழை நின்ற பிறகு தெளிக்கவும்.", "இப்போது தெளித்தால் மழையால் மருந்தின் பயன் குறையலாம்."]
+        )
+      : choose(
+          ["Rain is less likely to disrupt spraying today.", "Today's forecast looks more favorable for spray timing.", "The forecast shows a lower rain risk for spraying today."],
+          ["இன்று தெளிப்பதை மழை பாதிக்க வாய்ப்பு குறைவு.", "இன்றைய முன்னறிவிப்பு தெளிப்பதற்கு சாதகமாகத் தெரிகிறது.", "இன்று தெளிப்பதற்கான மழை அபாயம் குறைவாக உள்ளது."]
         );
   }
 
@@ -129,10 +152,50 @@ function buildFallbackHeadline({ query, context, targetForecast, isTamil, variat
   );
 }
 
+function buildFallbackAction({ query, context, targetForecast, isTamil, deterministicAdvisory }) {
+  const lowerQuery = String(query || "").toLowerCase();
+  const rainChance = targetForecast?.rainProbability ?? context.weather?.rainProbability;
+  const rainfall = targetForecast?.rainfallMm ?? context.weather?.rainfallMm;
+  const wind = targetForecast?.windSpeedKmh ?? context.weather?.windSpeedKmh;
+  const rainRisk = (rainChance != null && rainChance >= 60) || (rainfall != null && rainfall >= 5);
+
+  if (isFertilizerQuestion(lowerQuery)) {
+    if (rainRisk) {
+      return isTamil
+        ? "மழை வாய்ப்பு அல்லது எதிர்பார்க்கப்படும் மழையளவு அதிகமாக இருப்பதால், மழை நின்ற பிறகு உரமிடுங்கள்."
+        : "Rain is likely enough to interfere, so postpone fertilizer application until after it passes.";
+    }
+    if (rainChance == null) {
+      return isTamil
+        ? "உரமிடும் நேரத்தை மதிப்பிட மழை முன்னறிவிப்பு கிடைக்கவில்லை. தயாரிப்பு லேபிள் மற்றும் உள்ளூர் வேளாண் வழிகாட்டுதலைப் பின்பற்றுங்கள்."
+        : "I don't have a usable rain forecast to assess fertilizer timing. Follow the product label and local agronomic guidance.";
+    }
+    return isTamil
+      ? `மழை வாய்ப்பு ${Math.round(rainChance)}% என்பதால், முன்னறிவிப்பு காலத்தில் உரமிடுவதை மழை பாதிக்க வாய்ப்பு குறைவு. தயாரிப்பு லேபிள் மற்றும் உள்ளூர் வேளாண் வழிகாட்டுதலைப் பின்பற்றுங்கள்.`
+      : `Rain chance is ${Math.round(rainChance)}%, so rain is less likely to interfere with fertilizer application during this forecast period. Follow the product label and local agronomic guidance.`;
+  }
+
+  if (lowerQuery.includes("spray") || lowerQuery.includes("pesticide") || lowerQuery.includes("தெளி")) {
+    if (rainRisk) {
+      return isTamil
+        ? "மழை மருந்தைக் கழுவிச் செல்லலாம்; மழை நின்ற பிறகு தெளிக்கவும்."
+        : "Rain could wash the treatment off, so wait until it passes before spraying.";
+    }
+    if (wind != null && wind >= 25) {
+      return isTamil
+        ? `காற்று ${Math.round(wind)} கிமீ/மணி வேகத்தில் உள்ளது; மருந்து பயிரிலிருந்து விலகிச் செல்லாமல் இருக்க காற்று தணிந்த பிறகு தெளிக்கவும்.`
+        : `Wind is ${Math.round(wind)} km/h; wait for calmer conditions so the spray does not drift away from the crop.`;
+    }
+  }
+
+  return deterministicAdvisory;
+}
+
 async function generateAdvisoryWithGrounding({ query, context }) {
   let attempts = 0;
   let lastFailureReason = null;
   let quotaExhausted = false;
+  let requestTimedOut = false;
 
   while (attempts <= MAX_REGENERATIONS) {
     attempts++;
@@ -162,12 +225,17 @@ async function generateAdvisoryWithGrounding({ query, context }) {
         warn("Gemini quota is exhausted. Skipping regeneration and using the grounded fallback.");
         break;
       }
+      if (isTimeoutError(err)) {
+        requestTimedOut = true;
+        warn("Gemini request timed out. Using the grounded fallback.");
+        break;
+      }
       error(`Error generating or parsing Gemini advisory on attempt ${attempts}`, err);
       lastFailureReason = err.message;
     }
   }
 
-  if (!quotaExhausted) {
+  if (!quotaExhausted && !requestTimedOut) {
     warn("Grounding verification exceeded maximum retries. Using safe deterministic fallback.");
   }
   const isTamil = context.language === "ta";
@@ -181,7 +249,7 @@ async function generateAdvisoryWithGrounding({ query, context }) {
       { icon: "🌡", label: isTamil ? "வெப்பநிலை" : "Temperature", value: `${Math.round(targetForecast.temperatureMaxC ?? context.weather?.temperatureC ?? 30)}°C` },
       { icon: "💨", label: isTamil ? "காற்று" : "Wind", value: `${Math.round(targetForecast.windSpeedKmh ?? context.weather?.windSpeedKmh ?? 12)} km/h` },
     ],
-    action: deterministicAdvisory,
+    action: buildFallbackAction({ query, context, targetForecast, isTamil, deterministicAdvisory }),
     localTrust: context.localTrust
       ? {
           trustScore: `${Math.round((context.localTrust.trustScore || 0.8) * 100)}%`,
@@ -193,4 +261,4 @@ async function generateAdvisoryWithGrounding({ query, context }) {
   };
 }
 
-module.exports = { generateAdvisoryWithGrounding, buildFallbackHeadline, buildPrompt };
+module.exports = { generateAdvisoryWithGrounding, buildFallbackHeadline, buildFallbackAction, buildPrompt };

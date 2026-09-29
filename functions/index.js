@@ -17,7 +17,7 @@ const { buildEvidence } = require("./lib/weather/evidenceBuilder");
 const { recordUserFeedback, actualRainFromAccuracy } = require("./lib/feedback/feedback");
 const { recalibrateAllClustersNightly } = require("./lib/feedback/calibration");
 const { derivePredictedRain, updateFarmerVoteOnTrack } = require("./lib/feedback/trackRecord");
-const { runSnapshotForecasts, runVerifyForecasts, getISTDateString } = require("./lib/feedback/schedulerJobs");
+const { runSnapshotForecasts, runVerifyForecasts, getISTDateString, recordDashboardForecastSnapshots } = require("./lib/feedback/schedulerJobs");
 const { detectSevereWeather, calculateSeverity } = require("./lib/alerts/detection");
 const { filterAlertsForUser } = require("./lib/alerts/vulnerability");
 const { buildPersonalizedAlert, sendFcmAlert, SmsAdapter } = require("./lib/alerts/personalization");
@@ -282,10 +282,16 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
 
   try {
     const weather = await getWeather(lat, lng, lang);
-    const cluster = requestedCluster?.displayName
+    const cluster = requestedCluster?.clusterId && requestedCluster?.displayName
       ? requestedCluster
-      : weather.location?.cluster || resolveCluster(lat, lng, district);
+      : resolveCluster(lat, lng, district);
     weather.location = { ...weather.location, cluster };
+
+    try {
+      await recordDashboardForecastSnapshots({ cluster, dailyForecasts: weather.daily });
+    } catch (snapshotErr) {
+      warn("Failed to snapshot dashboard forecasts", { error: snapshotErr.message, clusterId: cluster.clusterId });
+    }
 
     // Retrieve trust score for this cluster
     const trustDoc = await db.collection("trust_scores").doc(cluster.clusterId).get();

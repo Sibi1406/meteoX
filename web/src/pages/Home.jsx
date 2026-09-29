@@ -33,6 +33,7 @@ export default function Home({ profile }) {
   const isTamil = language === "ta";
 
   const resolvedClusterId = clusterData?.clusterId || (district ? district.toLowerCase().replace(/\s+/g, "") : "tirunelveli");
+  const feedbackClusterId = data?.cluster?.clusterId || resolvedClusterId;
 
   useEffect(() => {
     let isMounted = true;
@@ -92,16 +93,27 @@ export default function Home({ profile }) {
     let isMounted = true;
     async function loadPendingFeedbackPrompt() {
       try {
-        const result = await api.getPendingFeedbackPrompt({ clusterId: resolvedClusterId, languageCode: language });
+        const result = await api.getPendingFeedbackPrompt({ clusterId: feedbackClusterId, languageCode: language });
         if (isMounted) setPendingFeedback(result);
       } catch (err) {
         console.error("Failed to load pending forecast feedback prompt:", err);
         if (isMounted) setPendingFeedback(null);
       }
     }
+    const refreshPrompt = () => {
+      if (!document.hidden) loadPendingFeedbackPrompt();
+    };
     loadPendingFeedbackPrompt();
-    return () => { isMounted = false; };
-  }, [resolvedClusterId, language]);
+    const refreshTimer = window.setInterval(refreshPrompt, 5 * 60 * 1000);
+    window.addEventListener("focus", refreshPrompt);
+    document.addEventListener("visibilitychange", refreshPrompt);
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshPrompt);
+      document.removeEventListener("visibilitychange", refreshPrompt);
+    };
+  }, [feedbackClusterId, language]);
 
   if (loading) {
     return <div className="dashboard-loading-view"><Loading message={t("loadingDashboard")} /></div>;

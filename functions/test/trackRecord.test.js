@@ -2,12 +2,63 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert");
 const { derivePredictedRain, verifyForecastDoc, computeTrackRecord, rebuildTrackRecord, updateFarmerVoteOnTrack } = require("../lib/feedback/trackRecord");
-const { getISTDateString } = require("../lib/feedback/schedulerJobs");
+const { getISTDateString, recordDashboardForecastSnapshots } = require("../lib/feedback/schedulerJobs");
 const { RAIN_DAY_MM } = require("../lib/config");
 
 describe("Self-Grading Forecasts & Track Record Engine", () => {
   const targetDate = "2026-09-28";
   const deadlineIso = "2026-09-28T00:00:00+05:30";
+
+  it("stores upcoming dashboard forecasts and throttles repeated snapshots", async () => {
+    const documents = new Map();
+    const dbMock = {
+      collection(name) {
+        return {
+          doc(id) {
+            return { key: `${name}/${id}` };
+          },
+        };
+      },
+      async runTransaction(callback) {
+        return callback({
+          async get(ref) {
+            const value = documents.get(ref.key);
+            return { exists: Boolean(value), data: () => value };
+          },
+          set(ref, value, options = {}) {
+            const previous = documents.get(ref.key) || {};
+            documents.set(ref.key, options.merge ? { ...previous, ...value } : value);
+          },
+        });
+      },
+    };
+    const now = new Date("2026-09-29T12:00:00+05:30");
+    const input = {
+      cluster: { clusterId: "tenkasi", displayName: "Tenkasi" },
+      dailyForecasts: [
+        { date: "2026-09-29", rainProbability: 90, rainfallMm: 12 },
+        { date: "2026-09-30", rainProbability: 75, rainfallMm: 8 },
+        { date: "2026-10-01", rainProbability: 20, rainfallMm: 0 },
+      ],
+      dbInstance: dbMock,
+      now,
+    };
+
+    assert.strictEqual(await recordDashboardForecastSnapshots(input), 2);
+    assert.strictEqual(await recordDashboardForecastSnapshots(input), 0);
+    const firstDay = documents.get("forecast_tracks/tenkasi_2026-09-30");
+    assert.strictEqual(firstDay.history.length, 1);
+    assert.strictEqual(firstDay.history[0].predictedRain, true);
+    assert.strictEqual(firstDay.verification.status, "pending");
+    assert.strictEqual(documents.has("forecast_tracks/tenkasi_2026-09-29"), false);
+
+    assert.strictEqual(await recordDashboardForecastSnapshots({
+      ...input,
+      now: new Date(now.getTime() + 6 * 60 * 60 * 1000 + 1),
+    }), 2);
+    assert.strictEqual(firstDay.history.length, 1);
+    assert.strictEqual(documents.get("forecast_tracks/tenkasi_2026-09-30").history.length, 2);
+  });
 
   it("derives the stored rain prediction without accepting a client-provided value", () => {
     const stored = {

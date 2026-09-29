@@ -8,6 +8,8 @@ const { PREDICT_RAIN_PROB } = require("../config");
 const { info, warn, error } = require("../utils/logger");
 const axios = require("axios");
 
+const SNAPSHOT_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
 /**
  * Returns date string in YYYY-MM-DD for Asia/Kolkata timezone with day offset.
  * e.g. -1 for yesterday, 0 for today, 1 for tomorrow, 2 for day after tomorrow.
@@ -82,6 +84,63 @@ async function fetchYesterdayPrecipitation(lat, lng, targetDate) {
     return Number(sums[idx]);
   }
   return null;
+}
+
+async function recordDashboardForecastSnapshots({ cluster, dailyForecasts = [], dbInstance = db, now = new Date() }) {
+  if (!cluster?.clusterId || !Array.isArray(dailyForecasts)) return 0;
+
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const targets = dailyForecasts.filter((forecast) => forecast?.date > todayStr).slice(0, 2);
+  let savedCount = 0;
+
+  for (const forecast of targets) {
+    if (forecast.rainProbability == null || forecast.rainfallMm == null) continue;
+    const rainProbability = Number(forecast.rainProbability);
+    const rainfallMm = Number(forecast.rainfallMm);
+    if (!Number.isFinite(rainProbability) || !Number.isFinite(rainfallMm)) continue;
+
+    const docRef = dbInstance.collection("forecast_tracks").doc(`${cluster.clusterId}_${forecast.date}`);
+    let saved = false;
+    await dbInstance.runTransaction(async (transaction) => {
+      const snap = await transaction.get(docRef);
+      const data = snap.exists ? snap.data() : {};
+      const history = Array.isArray(data.history) ? [...data.history] : [];
+      const latestIssuedAt = history.reduce((latest, entry) => {
+        const issuedAt = Date.parse(entry?.issuedAt || "");
+        return Number.isFinite(issuedAt) ? Math.max(latest, issuedAt) : latest;
+      }, 0);
+
+      if (latestIssuedAt && now.getTime() - latestIssuedAt < SNAPSHOT_INTERVAL_MS) return;
+
+      history.push({
+        issuedAt: now.toISOString(),
+        rainProbability,
+        rainfallMm,
+        predictedRain: rainProbability >= PREDICT_RAIN_PROB,
+        modelAgreement: null,
+      });
+      if (history.length > 16) history.splice(0, history.length - 16);
+
+      transaction.set(docRef, {
+        clusterId: cluster.clusterId,
+        districtName: cluster.displayName || cluster.name || cluster.clusterId,
+        targetDate: forecast.date,
+        history,
+        farmer: data.farmer || { yes: 0, no: 0 },
+        verification: data.verification || { status: "pending" },
+        updatedAt: now.toISOString(),
+      }, { merge: true });
+      saved = true;
+    });
+    if (saved) savedCount++;
+  }
+
+  return savedCount;
 }
 
 /**
@@ -306,6 +365,7 @@ async function runVerifyForecasts(dbInstance = db) {
 module.exports = {
   getISTDateString,
   fetchYesterdayPrecipitation,
+  recordDashboardForecastSnapshots,
   mapConcurrent,
   withRetry,
   runSnapshotForecasts,
