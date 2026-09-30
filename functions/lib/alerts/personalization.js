@@ -81,10 +81,11 @@ class WhatsAppAdapter {
 }
 
 class SmsAdapter {
-  constructor(accountSid = null, authToken = null, fromNumber = null, contentSid = null) {
+  constructor(accountSid = null, authToken = null, fromNumber = null, contentSid = null, clientFactory = twilio) {
     this.accountSid = accountSid || process.env.TWILIO_ACCOUNT_SID;
     this.authToken = authToken || process.env.TWILIO_AUTH_TOKEN;
     this.fromNumber = fromNumber || process.env.TWILIO_FROM_NUMBER;
+    this.clientFactory = clientFactory;
     const enableCustomContent = process.env.TWILIO_ENABLE_CONTENT === "true";
     this.contentSid = contentSid || (enableCustomContent ? process.env.TWILIO_CONTENT_SID : null);
     this.trialTemplate = process.env.TWILIO_TRIAL_TEMPLATE || "sms_customer_support";
@@ -94,14 +95,15 @@ class SmsAdapter {
       return { status: "NOT_CONFIGURED", channel: "sms" };
     }
     try {
-      const client = twilio(this.accountSid, this.authToken);
+      const client = this.clientFactory(this.accountSid, this.authToken);
       const messageOptions = {
         from: this.fromNumber,
         to: toPhoneNumber,
-        body: this.trialTemplate,
+        ...(this.contentSid
+          ? { contentSid: this.contentSid }
+          : { body: this.trialTemplate }),
       };
 
-      // Use the exact Twilio trial pattern that is currently working: body is the configured template name.
       const result = await client.messages.create(messageOptions);
       return { status: "SENT", channel: "sms", messageId: result.sid };
     } catch (err) {

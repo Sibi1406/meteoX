@@ -1860,6 +1860,12 @@ input, select, textarea {
   font-size: 13px;
 }
 
+.track-record-demo-toggle {
+  display: block;
+  width: auto;
+  margin: 0 0 10px auto;
+}
+
 /* ==========================================================================
    LANDING PAGE & AUTHENTICATION
    ========================================================================== */
@@ -3529,6 +3535,13 @@ input, select, textarea {
   font-size: 13px;
   color: var(--text-secondary);
   margin-top: 6px;
+}
+
+.action-window-explanation {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .action-window-basis-strip {

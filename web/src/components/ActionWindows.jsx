@@ -19,8 +19,26 @@ function formatHourRange(startISO, endISO, isTamil = false) {
     return startFormatted;
   }
 
+  end.setTime(end.getTime() + 60 * 60 * 1000);
   const endFormatted = end.toLocaleTimeString(isTamil ? "ta-IN" : "en-US", timeOptions);
   return `${startFormatted} – ${endFormatted}`;
+}
+
+function getSprayExplanation(window, t) {
+  if (window.type === "spray_window") return t("sprayWindowExplanation");
+  if (window.type !== "no_spray_window") return null;
+
+  const blocker = window.basis?.[0];
+  const messages = {
+    rainProbability: "sprayBlockedByRain",
+    windSpeed: "sprayBlockedByWind",
+    temperature: "sprayBlockedByHeat",
+  };
+  const message = messages[blocker?.metric];
+  if (!message) return t("sprayNoSuitableWindow");
+
+  const value = Number.isFinite(Number(blocker.value)) ? Math.round(Number(blocker.value)) : "--";
+  return t(message).replace("{value}", value);
 }
 
 export default function ActionWindows({ windows = [], isTamil = false }) {
@@ -112,9 +130,15 @@ export default function ActionWindows({ windows = [], isTamil = false }) {
           const title = typeTitles[win.type] || win.type.replace(/_/g, " ");
           const icon = typeIcons[win.type] || "⏱️";
           const timeRange = formatHourRange(win.startISO, win.endISO, isTamil);
+          const explanation = getSprayExplanation(win, t);
           const severityClass = ["info", "caution", "avoid"].includes(win.severity)
             ? win.severity
             : "info";
+          const statusLabel = win.type === "spray_window"
+            ? t("sprayForecastSuitable")
+            : win.type === "no_spray_window"
+              ? t("sprayWaitAndRecheck")
+              : severityLabels[severityClass];
 
           return (
             <div
@@ -127,7 +151,7 @@ export default function ActionWindows({ windows = [], isTamil = false }) {
                   <span className="window-title">{title}</span>
                 </div>
                 <span className={`window-severity-pill severity-${severityClass}`}>
-                  {severityLabels[severityClass]}
+                  {statusLabel}
                 </span>
               </div>
 
@@ -137,6 +161,8 @@ export default function ActionWindows({ windows = [], isTamil = false }) {
                   <span className="time-range-text">{timeRange} (IST)</span>
                 </div>
               )}
+
+              {explanation && <p className="action-window-explanation">{explanation}</p>}
 
               {Array.isArray(win.basis) && win.basis.length > 0 && (
                 <div className="action-window-basis-strip">

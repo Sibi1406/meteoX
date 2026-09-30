@@ -15,6 +15,7 @@ import { SunArc, WeatherAtmosphere } from "../components/WeatherEffects";
 import useTilt from "../hooks/useTilt";
 import { rainColor, tempColor } from "../utils/weatherColors";
 import { getSkyPhase, storeSkyTimes } from "../utils/skyPhase";
+import { buildDemoTrackRecord } from "../utils/demoTrackRecord";
 
 export default function Home({ profile }) {
   const { language, t } = useLanguage();
@@ -22,6 +23,8 @@ export default function Home({ profile }) {
   const [loading, setLoading] = useState(true);
   const [pendingFeedback, setPendingFeedback] = useState(null);
   const [simulatedAlert, setSimulatedAlert] = useState(null);
+  const [showDemoTrackRecord, setShowDemoTrackRecord] = useState(false);
+  const [demoTrackRecord] = useState(() => buildDemoTrackRecord());
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const weatherCardRef = useTilt();
 
@@ -297,8 +300,14 @@ export default function Home({ profile }) {
         <div className="dashboard-sidebar-col">
           {/* 1. TrackRecordGrid */}
           <div className="track-record-section">
+            <button
+              className="btn-secondary demo-trigger-btn track-record-demo-toggle"
+              onClick={() => setShowDemoTrackRecord((showing) => !showing)}
+            >
+              {t(showDemoTrackRecord ? "showLiveTrackRecord" : "showDemoTrackRecord")}
+            </button>
             <TrackRecordGrid
-              trackRecord={data?.trackRecord}
+              trackRecord={showDemoTrackRecord ? demoTrackRecord : data?.trackRecord}
               trustScore={data?.trustScore}
               rainDayMm={data?.rainDayMm}
               clusterName={cluster.displayName || district}

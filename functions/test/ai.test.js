@@ -1,9 +1,54 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 const { buildFallbackHeadline, buildFallbackAction, buildPrompt } = require("../lib/ai/advisory");
+const { getOrGenerateDashboardAdvisory } = require("../lib/ai/dashboardAdvisoryCache");
 const { isQuotaError, isTimeoutError } = require("../lib/ai/gemini");
 
 describe("Gemini advisory resilience", () => {
+  it("reuses dashboard advisories for 15 minutes per cluster, role, and language", async () => {
+    const documents = new Map();
+    const dbMock = {
+      collection(name) {
+        return {
+          doc(id) {
+            const key = `${name}/${id}`;
+            return {
+              async get() {
+                const value = documents.get(key);
+                return { exists: Boolean(value), data: () => value };
+              },
+              async set(value) {
+                documents.set(key, value);
+              },
+            };
+          },
+        };
+      },
+    };
+    let generationCount = 0;
+    const request = {
+      dbInstance: dbMock,
+      clusterId: "tirunelveli",
+      role: "farmer",
+      language: "en",
+      now: 1000000,
+      generate: async () => ({ headline: `Outlook ${++generationCount}` }),
+    };
+
+    assert.deepStrictEqual(await getOrGenerateDashboardAdvisory(request), {
+      advisory: { headline: "Outlook 1" },
+      fromCache: false,
+    });
+    assert.deepStrictEqual(await getOrGenerateDashboardAdvisory({ ...request, now: 1000000 + 899999 }), {
+      advisory: { headline: "Outlook 1" },
+      fromCache: true,
+    });
+    assert.deepStrictEqual(await getOrGenerateDashboardAdvisory({ ...request, now: 1000000 + 900000 }), {
+      advisory: { headline: "Outlook 2" },
+      fromCache: false,
+    });
+  });
+
   it("recognizes quota exhaustion without classifying unrelated errors", () => {
     assert.strictEqual(isQuotaError({ status: 429 }), true);
     assert.strictEqual(isQuotaError({ status: "RESOURCE_EXHAUSTED" }), true);

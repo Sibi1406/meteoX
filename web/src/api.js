@@ -1,7 +1,8 @@
 // api.js - Firebase callable API client for MeteoX
 import { httpsCallable } from "firebase/functions";
-import { auth, functions, signInAnonymously } from "./firebase";
+import { auth, firebaseConfigMissing, functions, signInAnonymously } from "./firebase";
 import weatherThresholds from "../../functions/lib/weatherThresholds.json";
+import { buildDemoTrackRecord } from "./utils/demoTrackRecord";
 
 /**
  * WMO Weather code interpreter for local display use.
@@ -230,7 +231,7 @@ export const api = {
       await ensureSignedIn();
       const result = await withTimeout(
         () => httpsCallable(functions, "getWeatherDashboard")(data),
-        10000,
+        60000,
         "getWeatherDashboard timed out"
       );
       return normalizeDashboardResult(result.data, data);
@@ -271,7 +272,7 @@ export const api = {
           severity: "normal",
         },
         trustScore: null,
-        trackRecord: null,
+        trackRecord: firebaseConfigMissing ? buildDemoTrackRecord() : null,
         drift: null,
         actionWindows: [],
         evidence: null,

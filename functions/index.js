@@ -9,8 +9,10 @@ const { getWeather } = require("./lib/weather/weather");
 const { processQuery } = require("./lib/query/queryProcessor");
 const { retrieveStructuredData } = require("./lib/rag/retrieval");
 const { buildRagContext } = require("./lib/rag/contextBuilder");
+const { getLocalTrustScore } = require("./lib/rag/context");
 const { generateAdvisoryWithGrounding } = require("./lib/ai/advisory");
-const { evaluateRoleAdvisory, evaluateRoleAdvisoryDetailed } = require("./lib/advisory/roleRules");
+const { getOrGenerateDashboardAdvisory } = require("./lib/ai/dashboardAdvisoryCache");
+const { getRoleRules, evaluateRoleAdvisory, evaluateRoleAdvisoryDetailed } = require("./lib/advisory/roleRules");
 const { computeActionWindows } = require("./lib/advisory/actionWindows");
 const { computeDrift } = require("./lib/weather/drift");
 const { buildEvidence } = require("./lib/weather/evidenceBuilder");
@@ -271,7 +273,7 @@ exports.handleQuery = onCall(
 // ---------------------------------------------------------------------------
 // 2. getWeatherDashboard — Pre-fetches comprehensive dashboard state
 // ---------------------------------------------------------------------------
-exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) => {
+exports.getWeatherDashboard = onCall({ invoker: ["public"], secrets: [geminiKey] }, async (request) => {
   const { lat, lng, role, languageCode, district, cluster: requestedCluster } = request.data || {};
   if (lat == null || lng == null) {
     throw new HttpsError("invalid-argument", "Latitude and Longitude required");
@@ -294,7 +296,11 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
     }
 
     // Retrieve trust score for this cluster
-    const trustDoc = await db.collection("trust_scores").doc(cluster.clusterId).get();
+    const [trustDoc, localTrust, roleRules] = await Promise.all([
+      db.collection("trust_scores").doc(cluster.clusterId).get(),
+      getLocalTrustScore(cluster, weather.geohash),
+      getRoleRules(effectiveRole),
+    ]);
     const trustData = trustDoc.exists ? trustDoc.data() : null;
 
     // Detect any severe threshold alerts
@@ -323,22 +329,30 @@ exports.getWeatherDashboard = onCall({ invoker: ["public"] }, async (request) =>
 
     const trackRecord = trustData?.trackRecord || null;
 
-    // Get deterministic agricultural / role advisory with rule tracking
+    // Keep the deterministic rule result in evidence; the visible advisory is Gemini-grounded.
     const detailedRule = evaluateRoleAdvisoryDetailed(effectiveRole, weather, lang);
-    const roleAdvisory = detailedRule.text;
     const severity = calculateSeverity(weather);
-    const isTamil = lang === "ta";
-    const severityHeadlines = {
-      urgent: isTamil ? "கடுமையான வானிலை குறித்து கூடுதல் கவனம் தேவை." : "Take extra care with the severe weather ahead.",
-      caution: isTamil ? "மாறும் வானிலையை கவனித்துத் திட்டமிடுங்கள்." : "Keep an eye on changing conditions as you plan.",
-      normal: isTamil ? "வழக்கமான திட்டங்களைத் தொடர வானிலை சாதகமாக உள்ளது." : "Conditions look manageable for your usual plans.",
-    };
-    const dashboardAdvisory = {
-      headline: severityHeadlines[severity],
-      facts: buildWeatherFacts(weather, weather.tomorrow || weather.today, isTamil),
-      action: roleAdvisory,
-      severity,
-    };
+    const dashboardQuery = lang === "ta"
+      ? "இன்றைய வானிலை முன்னறிவிப்பு என்ன?"
+      : "What's today's weather outlook?";
+    const ragContext = buildRagContext({
+      userQuery: dashboardQuery,
+      role: effectiveRole,
+      language: lang,
+      location: { latitude: lat, longitude: lng, cluster },
+      weather,
+      localTrust: localTrust?.isUsable ? localTrust : null,
+      roleRules,
+      dateTime: "today",
+    });
+    const { advisory: generatedAdvisory } = await getOrGenerateDashboardAdvisory({
+      dbInstance: db,
+      clusterId: cluster.clusterId,
+      role: effectiveRole,
+      language: lang,
+      generate: () => generateAdvisoryWithGrounding({ query: dashboardQuery, context: ragContext }),
+    });
+    const dashboardAdvisory = { ...generatedAdvisory, severity };
 
     // Deterministic evidence payload (Spec Section 5)
     const evidence = buildEvidence({

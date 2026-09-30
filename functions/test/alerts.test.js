@@ -3,9 +3,48 @@ const { describe, it } = require("node:test");
 const assert = require("node:assert");
 const { detectSevereWeather, calculateSeverity } = require("../lib/alerts/detection");
 const { filterAlertsForUser } = require("../lib/alerts/vulnerability");
-const { buildPersonalizedAlert } = require("../lib/alerts/personalization");
+const { buildPersonalizedAlert, SmsAdapter } = require("../lib/alerts/personalization");
 
 describe("Official Weather Alert System", () => {
+  it("sends the configured support-template text through Twilio for the demo", async () => {
+    let sentOptions;
+    const adapter = new SmsAdapter(
+      "AC_TEST",
+      "test-token",
+      "+15005550006",
+      null,
+      () => ({ messages: { create: async (options) => {
+        sentOptions = options;
+        return { sid: "SM_TEST" };
+      } } })
+    );
+
+    const result = await adapter.send("+15005550001", "Heavy rain alert. Secure equipment.");
+
+    assert.strictEqual(result.status, "SENT");
+    assert.strictEqual(sentOptions.to, "+15005550001");
+    assert.strictEqual(sentOptions.body, "sms_customer_support");
+  });
+
+  it("uses an approved Twilio content SID instead of a raw body when configured", async () => {
+    let sentOptions;
+    const adapter = new SmsAdapter(
+      "AC_TEST",
+      "test-token",
+      "+15005550006",
+      "HX_APPROVED",
+      () => ({ messages: { create: async (options) => {
+        sentOptions = options;
+        return { sid: "SM_TEST" };
+      } } })
+    );
+
+    await adapter.send("+15005550001", "This body is supplied by the template.");
+
+    assert.strictEqual(sentOptions.contentSid, "HX_APPROVED");
+    assert.strictEqual("body" in sentOptions, false);
+  });
+
   it("does not alert from forecast thresholds alone", () => {
     const weather = {
       rainfallMm: 22,
